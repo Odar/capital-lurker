@@ -2,6 +2,7 @@ package university
 
 import (
 	"github.com/Masterminds/squirrel"
+	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/jmoiron/sqlx"
 )
@@ -18,6 +19,10 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetUniversities() ([]models.University, error) {
+func (r *repo) GetUniversities(filter api.Filter) ([]models.University, error) {
+
+}
+
+func (r *repo) GetNumUniversities() (uint64, error) {
 
 }
