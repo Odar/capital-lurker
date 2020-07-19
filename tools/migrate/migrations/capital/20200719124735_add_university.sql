@@ -15,7 +15,7 @@ create unique index univesity_id_uindex
     on university (id);
 
 create unique index university_name_uindex
-    on univestity (name);
+    on university (name);
 
 alter table university
     add constraint university_pk
