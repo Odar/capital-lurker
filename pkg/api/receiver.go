@@ -6,4 +6,5 @@ type ReverseRequest struct {
 
 type ReverseResponse struct {
 	Word string `json:"word"`
+	Uses uint64 `json:"uses"`
 }

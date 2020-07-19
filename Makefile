@@ -32,6 +32,17 @@ deps: .deps
 .generate:
 	${GO} generate ./...
 
-
 .PHONY: generate
 generate: .bin-deps .generate
+
+.PHONY: migrate
+migrate: migrate-deps migrate-build
+	bin/migrate --db=capital | xargs bin/goose
+
+.PHONY: migrate-build
+migrate-build:
+	$(GO) build -o ./bin/migrate ./tools/migrate
+
+.PHONY: migrate-deps
+migrate-deps:
+	GO111MODULE=off GOBIN=$(LOCAL_BIN) go get -u -v github.com/pressly/goose/cmd/goose

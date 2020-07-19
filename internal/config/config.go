@@ -3,11 +3,13 @@ package config
 
 import (
 	"github.com/Odar/capital-lurker/internal/server"
+	"github.com/Odar/capital-lurker/pkg/db"
 )
 
 type Config struct {
-	Server *server.Config
-	Logger *Logger
+	Server    *server.Config
+	CapitalDB *db.Config
+	Logger    *Logger
 }
 
 type Logger struct {

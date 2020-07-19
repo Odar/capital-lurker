@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:12.1
+    ports:
+      - 5432:5432
+    volumes:
+      #      - ./init/postgres:/var/lib/postgres
+      - ./../init/postgres:/docker-entrypoint-initdb.d/
+    environment:
+      POSTGRES_DB: capital
+      POSTGRES_PASSWORD: postgres
