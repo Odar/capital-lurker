@@ -7,6 +7,6 @@ type Receiver interface {
 }
 
 //heze
-type Adminer interface {
+type UniversityAdminer interface {
 	PostAdmin(ctx echo.Context) error
 }

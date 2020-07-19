@@ -18,6 +18,6 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) PostUniversity() ([]models.University, error) {
+func (r *repo) GetUniversities() ([]models.University, error) {
 
 }
