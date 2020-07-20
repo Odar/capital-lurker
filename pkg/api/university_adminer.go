@@ -4,8 +4,8 @@ import "time"
 import "github.com/Odar/capital-lurker/pkg/app/models"
 
 type DateRange struct {
-	from time.Time `json:"from"`
-	to   time.Time `json:"to"`
+	From time.Time `json:"from"`
+	To   time.Time `json:"to"`
 }
 
 type Filter struct {

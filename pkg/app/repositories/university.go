@@ -6,7 +6,6 @@ import (
 )
 
 type AdminerRepo interface {
-	GetUniversities(filter api.Filter) ([]models.University, error)
-	GetNumUniversities() (uint64, error)
+	GetUniversities(filter *api.Filter, sortBy string) ([]models.University, error)
 	//other issues
 }
