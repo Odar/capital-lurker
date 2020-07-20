@@ -22,9 +22,10 @@ func New(cfg *Config, receiver app.Receiver) *server {
 }
 
 type server struct {
-	echo     *echo.Echo
-	receiver app.Receiver
-	cfg      *Config
+	echo              *echo.Echo
+	receiver          app.Receiver
+	universityAdminer app.UniversityAdminer
+	cfg               *Config
 }
 
 func (s *server) Init() error {
