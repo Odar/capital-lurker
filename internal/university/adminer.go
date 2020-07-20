@@ -6,6 +6,7 @@ import (
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"net/http"
 )
@@ -44,7 +45,9 @@ func (a *adminer) PostAdmin(ctx echo.Context) error {
 func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error) {
 	content, err := a.repo.GetUniversities(&request.Filter, request.SortBy) //nil Filter case
 
-	//errors
+	if err != nil {
+		return nil, errors.Wrap(err, "can not get from universities list")
+	}
 	//Можно ли так делать? Я просто думал про рефлексию, но данные здесь статические, поэтомурешил просто все кейсы разобрать
 	/*
 		switch request.SortBy {
@@ -110,8 +113,7 @@ func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error
 		page = 1
 	}
 	if page > len(content)/limit {
-		//error: no such page
-		return nil, err
+		return nil, errors.New("no such page")
 	}
 
 	model := make([]models.University, 0, limit)
