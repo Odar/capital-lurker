@@ -25,30 +25,6 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 
 	//adding filters
 	filtered := base
-	/*switch {
-	case filter == nil:
-
-	case filter.Id != 0: //add fix to query: id starts from 1
-		filtered = filtered.Where("id = ?", filter.Id)
-		//fallthrough
-	case filter.Name != "":
-		filtered = filtered.Where("name LIKE %?%", filter.Name)
-		//fallthrough
-	case filter.OnMainPage: //how to parse blanks?
-		//fallthrough
-	case filter.AddedAtRange != nil:
-		filtered = filtered.Where("added_at >= ? AND added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
-		//fallthrough
-	case filter.UpdatedAtRange != nil:
-		filtered = filtered.Where("updated_at >= ? AND updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
-		//fallthrough
-	case filter.Position != 0:
-		filtered = filtered.Where("position = ?", filter.Position)
-		//fallthrough
-	case filter.Img != "":
-		filtered = filtered.Where("img LIKE %?%", filter.Img)
-	}
-	*/
 
 	if filter != nil {
 		if filter.Id != 0 { //add fix to query: id starts from 1
