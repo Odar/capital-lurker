@@ -31,15 +31,15 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 	case filter.Id != 0: //add fix to query: id starts from 1
 		filtered = filtered.Where("id = ?", filter.Id)
 		fallthrough
-	case filter.Name != "": //add constraint not blank string
+	case filter.Name != "":
 		filtered = filtered.Where("name LIKE %?%", filter.Name)
 		fallthrough
 	case filter.OnMainPage: //how to parse blanks?
 		fallthrough
-	case filter.AddedAtRange != api.DateRange{}:
+	case filter.AddedAtRange != nil:
 		filtered = filtered.Where("added_at >= ? AND added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
 		fallthrough
-	case filter.UpdatedAtRange != api.DateRange{}:
+	case filter.UpdatedAtRange != nil:
 		filtered = filtered.Where("updated_at >= ? AND updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
 		fallthrough
 	case filter.Position != 0:
@@ -52,9 +52,9 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 	sorted := filtered
 	switch sortBy {
 	case "":
-		sorted = sorted.OrderByClause("order by ?", "id DESC")
+		sorted = sorted.OrderBy("id DESC")
 	default:
-		sorted = sorted.OrderByClause("order by ?", sortBy)
+		sorted = sorted.OrderBy(sortBy)
 	}
 
 	sql, args, err := sorted.ToSql()

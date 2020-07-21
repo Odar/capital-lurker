@@ -28,6 +28,7 @@ func (a *adminer) PostAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
+	log.Info().Msgf("%+v", request)
 	model, err := a.postAdmin(request)
 
 	if err != nil {
@@ -43,7 +44,7 @@ func (a *adminer) PostAdmin(ctx echo.Context) error {
 }
 
 func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error) {
-	content, err := a.repo.GetUniversities(&request.Filter, request.SortBy) //nil Filter case
+	content, err := a.repo.GetUniversities(request.Filter, request.SortBy) //nil Filter case
 
 	if err != nil {
 		return nil, errors.Wrap(err, "can not get from universities list")
@@ -116,7 +117,7 @@ func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error
 		return nil, errors.New("no such page")
 	}
 
-	model := make([]models.University, 0, limit)
+	model := make([]models.University, limit, limit)
 	for i := 0; i < limit; i++ {
 		model[i] = content[(page-1)*limit+i]
 	}
