@@ -36,6 +36,13 @@ func (a *adminer) PostAdmin(ctx echo.Context) error {
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
 
+	if model == nil {
+		return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
+			Universities: []models.University{},
+			Count:        0,
+		})
+	}
+
 	return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
 		Universities: model,
 		Count:        uint64(len(model)),
@@ -44,6 +51,10 @@ func (a *adminer) PostAdmin(ctx echo.Context) error {
 
 func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error) {
 	content, err := a.repo.GetUniversities(request.Filter, request.SortBy) //nil Filter case
+
+	if content == nil {
+		return nil, err
+	}
 
 	if err != nil {
 		return nil, errors.Wrap(err, "can not get from universities list")
