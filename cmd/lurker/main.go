@@ -5,6 +5,7 @@ import (
 	"github.com/Odar/capital-lurker/internal/db"
 	"github.com/Odar/capital-lurker/internal/receiver"
 	"github.com/Odar/capital-lurker/internal/server"
+	"github.com/Odar/capital-lurker/internal/university"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -22,7 +23,10 @@ func main() {
 	receiverRepo := receiver.NewRepo(capitalDB)
 	receiverService := receiver.New(receiverRepo)
 
-	srv := server.New(cfg.Server, receiverService)
+	universityAdminerRepo := university.NewRepo(capitalDB)
+	universityAdminerServise := university.New(universityAdminerRepo)
+
+	srv := server.New(cfg.Server, receiverService, universityAdminerServise)
 	err = srv.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not initialize server")

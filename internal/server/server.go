@@ -10,14 +10,15 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func New(cfg *Config, receiver app.Receiver) *server {
+func New(cfg *Config, receiver app.Receiver, universityAdminer app.UniversityAdminer) *server {
 	e := echo.New()
 	e.Server.Addr = fmt.Sprintf(":%d", cfg.Port)
 
 	return &server{
-		echo:     e,
-		receiver: receiver,
-		cfg:      cfg,
+		echo:              e,
+		receiver:          receiver,
+		universityAdminer: universityAdminer,
+		cfg:               cfg,
 	}
 }
 

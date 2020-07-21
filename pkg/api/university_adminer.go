@@ -20,13 +20,13 @@ type Filter struct {
 }
 
 type PostRequest struct {
-	Limit  int    `query:"limit"`
-	Page   int    `query:"page"`
-	SortBy string `query:"sortBy"`
-	Filter Filter `query:"filter"`
+	Limit  int    `query:"limit" json:"limit"`
+	Page   int    `query:"page" json:"page"`
+	SortBy string `query:"sortBy" json:"sortBy"`
+	Filter Filter `query:"filter" json:"filter"`
 }
 
 type PostResponse struct {
-	Universities []models.University `json:"universities"` //должен ли я добавить теги для University?
+	Universities []models.University `json:"universities"`
 	Count        uint64              `json:"count"`
 }
