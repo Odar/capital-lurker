@@ -9,4 +9,5 @@ type Receiver interface {
 //heze
 type UniversityAdminer interface {
 	PostAdmin(ctx echo.Context) error
+	PutAdmin(ctx echo.Context) error
 }

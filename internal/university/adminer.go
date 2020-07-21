@@ -78,3 +78,11 @@ func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error
 
 	return model, err
 }
+
+func (a *adminer) PutAdmin(ctx echo.Context) error {
+	return nil
+}
+
+func (a *adminer) putAdmin(request api.PostRequest) (*models.University, error) {
+	return nil, nil
+}

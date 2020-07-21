@@ -30,3 +30,22 @@ type PostResponse struct {
 	Universities []models.University `json:"universities"`
 	Count        uint64              `json:"count"`
 }
+
+type PutRequest struct {
+	Name       string `query:"name" json:"name"`
+	OnMainPage bool   `query:"on_main_page" json:"on_main_page"`
+	InFilter   bool   `query:"in_filter" json:"in_filter"`
+	Position   uint64 `query:"position" json:"position"`
+	Img        string `query:"img" json:"img"`
+}
+
+type PutResponse struct {
+	ID         uint64    `json:"id"`
+	Name       string    `json:"name"`
+	OnMainPage bool      `json:"on_main_page"`
+	InFilter   bool      `json:"in_filter"`
+	AddedAt    time.Time `json:"added_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+	Position   uint64    `json:"position"`
+	Img        string    `json:"img"`
+}
