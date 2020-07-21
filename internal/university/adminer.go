@@ -28,7 +28,6 @@ func (a *adminer) PostAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	log.Info().Msgf("%+v", request)
 	model, err := a.postAdmin(request)
 
 	if err != nil {

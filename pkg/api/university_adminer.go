@@ -11,8 +11,8 @@ type DateRange struct {
 type Filter struct {
 	Id             uint64     `json:"id"`
 	Name           string     `json:"name"`
-	OnMainPage     bool       `json:"on_main_page"`
-	InFilter       bool       `json:"in_filter"`
+	OnMainPage     *bool      `json:"on_main_page"`
+	InFilter       *bool      `json:"in_filter"`
 	AddedAtRange   *DateRange `json:"added_at_range"`
 	UpdatedAtRange *DateRange `json:"updated_at_range"`
 	Position       uint64     `json:"position"`

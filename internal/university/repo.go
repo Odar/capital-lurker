@@ -25,28 +25,56 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 
 	//adding filters
 	filtered := base
-	switch {
+	/*switch {
 	case filter == nil:
 
 	case filter.Id != 0: //add fix to query: id starts from 1
 		filtered = filtered.Where("id = ?", filter.Id)
-		fallthrough
+		//fallthrough
 	case filter.Name != "":
 		filtered = filtered.Where("name LIKE %?%", filter.Name)
-		fallthrough
+		//fallthrough
 	case filter.OnMainPage: //how to parse blanks?
-		fallthrough
+		//fallthrough
 	case filter.AddedAtRange != nil:
 		filtered = filtered.Where("added_at >= ? AND added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
-		fallthrough
+		//fallthrough
 	case filter.UpdatedAtRange != nil:
 		filtered = filtered.Where("updated_at >= ? AND updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
-		fallthrough
+		//fallthrough
 	case filter.Position != 0:
 		filtered = filtered.Where("position = ?", filter.Position)
-		fallthrough
+		//fallthrough
 	case filter.Img != "":
 		filtered = filtered.Where("img LIKE %?%", filter.Img)
+	}
+	*/
+
+	if filter != nil {
+		if filter.Id != 0 { //add fix to query: id starts from 1
+			filtered = filtered.Where("id = ?", filter.Id)
+		}
+		if filter.Name != "" {
+			filtered = filtered.Where("name LIKE %?%", filter.Name)
+		}
+		if filter.OnMainPage != nil { //how to parse blanks?
+			filtered = filtered.Where("on_main_page = ?", *filter.OnMainPage)
+		}
+		if filter.InFilter != nil {
+			filtered = filtered.Where("in_filter = ?", *filter.InFilter)
+		}
+		if filter.AddedAtRange != nil {
+			filtered = filtered.Where("added_at >= ? AND added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
+		}
+		if filter.UpdatedAtRange != nil {
+			filtered = filtered.Where("updated_at >= ? AND updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
+		}
+		if filter.Position != 0 {
+			filtered = filtered.Where("position = ?", filter.Position)
+		}
+		if filter.Img != "" {
+			filtered = filtered.Where("img LIKE %?%", filter.Img)
+		}
 	}
 
 	sorted := filtered
