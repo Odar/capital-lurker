@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"strconv"
 )
 
 func New(repo repositories.AdminerRepo) *adminer {
@@ -120,9 +121,34 @@ func (a *adminer) putAdmin(request api.PutRequest) (*models.University, error) {
 }
 
 func (a *adminer) DeleteAdmin(ctx echo.Context) error {
-	return nil
+	id := ctx.ParamValues()
+	if len(id) > 0 && id[0] != "" {
+		idInt, err := strconv.ParseUint(id[0], 10, 64)
+		if err != nil {
+			return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		}
+
+		resp, err := a.deleteAdmin(idInt)
+		ctx.Response().WriteHeader(http.StatusOK)
+		if resp != nil {
+			if err != nil {
+				return json.NewEncoder(ctx.Response()).Encode(api.DeleteResponse{
+					Whdb:  *resp,
+					Error: err.Error(),
+				})
+			} else {
+				return json.NewEncoder(ctx.Response()).Encode(api.DeleteResponse{
+					Whdb:  *resp,
+					Error: "",
+				})
+			}
+		} else {
+			return ctx.String(http.StatusInternalServerError, "something gone wrong")
+		}
+	}
+	return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 }
 
 func (a *adminer) deleteAdmin(id uint64) (*string, error) {
-	return nil, nil
+	return a.repo.DeleteUniversity(id)
 }
