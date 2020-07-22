@@ -67,13 +67,13 @@ func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error
 	if page <= 0 {
 		page = 1
 	}
-	if page > len(content)/limit {
+	if page-1 > len(content)/limit {
 		return nil, errors.New("no such page")
 	}
 
-	model := make([]models.University, limit, limit)
-	for i := 0; i < limit; i++ {
-		model[i] = content[(page-1)*limit+i]
+	model := make([]models.University, 0, limit)
+	for i := 0; i < limit && (page-1)*limit+i < len(content); i++ {
+		model = append(model, content[(page-1)*limit+i])
 	}
 
 	return model, err
