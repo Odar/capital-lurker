@@ -118,3 +118,11 @@ func (a *adminer) putAdmin(request api.PutRequest) (*models.University, error) {
 
 	return uni, nil
 }
+
+func (a *adminer) DeleteAdmin(ctx echo.Context) error {
+	return nil
+}
+
+func (a *adminer) deleteAdmin(id uint64) (*string, error) {
+	return nil, nil
+}

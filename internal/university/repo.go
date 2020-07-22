@@ -101,3 +101,7 @@ func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
 	}
 	return &res, nil
 }
+
+func (r *repo) DeleteUniversity(id uint64) (*string, error) {
+	return nil, nil
+}
