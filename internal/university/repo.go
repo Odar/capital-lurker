@@ -32,7 +32,7 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 			filtered = filtered.Where("id = ?", filter.Id)
 		}
 		if filter.Name != "" {
-			filtered = filtered.Where("name LIKE ?", filter.Name)
+			filtered = filtered.Where("name LIKE ?", "%"+filter.Name+"%")
 		}
 		if filter.OnMainPage != nil { //how to parse blanks?
 			filtered = filtered.Where("on_main_page = ?", *filter.OnMainPage)
@@ -50,7 +50,7 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 			filtered = filtered.Where("position = ?", filter.Position)
 		}
 		if filter.Img != "" {
-			filtered = filtered.Where("img LIKE ?", filter.Img)
+			filtered = filtered.Where("img LIKE ?", "%"+filter.Img+"%")
 		}
 	}
 
