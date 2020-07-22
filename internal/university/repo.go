@@ -6,6 +6,7 @@ import (
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
+	"time"
 )
 
 func NewRepo(postgres *sqlx.DB) *repo {
@@ -80,4 +81,23 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 	}
 
 	return nil, nil
+}
+
+func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
+	res := models.University{}
+	sql, args, err := r.builder.Insert("university").
+		Columns("name, on_main_page, in_filter, added_at, updated_at, position, img").
+		Values(uni.Name, uni.OnMainPage, uni.InFilter, time.Time(time.Now()), time.Time(time.Now()), uni.Position, uni.Img).
+		Suffix("RETURNING *").
+		ToSql()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+
+	err = r.postgres.Get(&res, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+	return &res, nil
 }

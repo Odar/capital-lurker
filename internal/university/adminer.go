@@ -80,9 +80,41 @@ func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error
 }
 
 func (a *adminer) PutAdmin(ctx echo.Context) error {
-	return nil
+	var request api.PutRequest
+	err := ctx.Bind(&request)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	model, err := a.putAdmin(request)
+
+	if err != nil {
+		log.Error().Err(err).Msgf("can not get universities list with request %+v", request)
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+	ctx.Response().WriteHeader(http.StatusOK)
+
+	if model == nil {
+		return json.NewEncoder(ctx.Response()).Encode(api.PutResponse{
+			University: models.University{},
+		})
+	}
+
+	return json.NewEncoder(ctx.Response()).Encode(api.PutResponse{
+		University: *model,
+	})
 }
 
-func (a *adminer) putAdmin(request api.PostRequest) (*models.University, error) {
-	return nil, nil
+func (a *adminer) putAdmin(request api.PutRequest) (*models.University, error) {
+	uni, err := a.repo.AddUniversity(request) //nil Filter case
+
+	if uni == nil {
+		return nil, err
+	}
+
+	if err != nil {
+		return nil, errors.Wrap(err, "can not add university to list")
+	}
+
+	return uni, nil
 }
