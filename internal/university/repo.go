@@ -87,7 +87,7 @@ func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
 	res := models.University{}
 	sql, args, err := r.builder.Insert("university").
 		Columns("name, on_main_page, in_filter, added_at, updated_at, position, img").
-		Values(uni.Name, uni.OnMainPage, uni.InFilter, time.Time(time.Now()), time.Time(time.Now()), uni.Position, uni.Img).
+		Values(uni.Name, uni.OnMainPage, uni.InFilter, time.Now().UTC(), time.Now().UTC(), uni.Position, uni.Img).
 		Suffix("RETURNING *").
 		ToSql()
 
