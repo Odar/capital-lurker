@@ -127,3 +127,7 @@ func (r *repo) DeleteUniversity(id uint64) (*string, error) {
 	ret = "nothing"
 	return &ret, nil
 }
+
+func (r *repo) UpdateUniversity(id uint64) (*models.University, error) {
+	return nil, nil
+}

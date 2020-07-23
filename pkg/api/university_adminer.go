@@ -47,3 +47,15 @@ type DeleteResponse struct {
 	Whdb  string `json:"whdb"`
 	Error string `json:"error"`
 }
+
+type PostIdRequest struct {
+	Name       string `query:"name" json:"name"`
+	OnMainPAge *bool  `query:"on_main_page" json:"on_main_p_age"`
+	InFilter   *bool  `query:"in_filter" json:"in_filter"`
+	Position   uint64 `query:"position" json:"position"`
+	Img        string `query:"img" json:"img"`
+}
+
+type PostIdResponse struct {
+	University models.University `json:"university"`
+}

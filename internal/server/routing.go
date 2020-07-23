@@ -5,4 +5,5 @@ func (s *server) setRoutes() {
 	s.echo.POST("/admin/university/", s.universityAdminer.PostAdmin)
 	s.echo.PUT("/admin/university/", s.universityAdminer.PutAdmin)
 	s.echo.DELETE("/admin/university/*", s.universityAdminer.DeleteAdmin) //only number
+	s.echo.POST("/admin/university/*", s.universityAdminer.PostIdAdmin)
 }

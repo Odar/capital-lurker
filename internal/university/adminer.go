@@ -152,3 +152,11 @@ func (a *adminer) DeleteAdmin(ctx echo.Context) error {
 func (a *adminer) deleteAdmin(id uint64) (*string, error) {
 	return a.repo.DeleteUniversity(id)
 }
+
+func (a *adminer) PostIdAdmin(ctx echo.Context) error {
+	return nil
+}
+
+func (a *adminer) postIdAdmin(request api.PostIdRequest) (*models.University, error) {
+	return nil, nil
+}

@@ -11,4 +11,5 @@ type UniversityAdminer interface {
 	PostAdmin(ctx echo.Context) error
 	PutAdmin(ctx echo.Context) error
 	DeleteAdmin(ctx echo.Context) error
+	PostIdAdmin(ctx echo.Context) error
 }
