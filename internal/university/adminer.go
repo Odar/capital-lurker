@@ -154,9 +154,34 @@ func (a *adminer) deleteAdmin(id uint64) (*string, error) {
 }
 
 func (a *adminer) PostIdAdmin(ctx echo.Context) error {
-	return nil
+	id := ctx.ParamValues()
+	if len(id) > 0 && id[0] != "" {
+		idInt, err := strconv.ParseUint(id[0], 10, 64)
+		if err != nil {
+			return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		}
+
+		var request api.PostIdRequest
+		err = ctx.Bind(&request)
+		if err != nil {
+			return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+		}
+
+		resp, err := a.postIdAdmin(request, idInt)
+
+		if err != nil {
+			log.Error().Err(err).Msgf("can not update university with request %+v and id = %d", request, idInt)
+			return ctx.String(http.StatusInternalServerError, err.Error())
+		}
+
+		ctx.Response().WriteHeader(http.StatusOK)
+		return json.NewEncoder(ctx.Response()).Encode(api.PutResponse{
+			University: *resp,
+		})
+	}
+	return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 }
 
-func (a *adminer) postIdAdmin(request api.PostIdRequest) (*models.University, error) {
-	return nil, nil
+func (a *adminer) postIdAdmin(request api.PostIdRequest, id uint64) (*models.University, error) {
+	return a.repo.UpdateUniversity(request, id)
 }

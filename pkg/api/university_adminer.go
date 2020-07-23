@@ -50,7 +50,7 @@ type DeleteResponse struct {
 
 type PostIdRequest struct {
 	Name       string `query:"name" json:"name"`
-	OnMainPAge *bool  `query:"on_main_page" json:"on_main_p_age"`
+	OnMainPage *bool  `query:"on_main_page" json:"on_main_page"`
 	InFilter   *bool  `query:"in_filter" json:"in_filter"`
 	Position   uint64 `query:"position" json:"position"`
 	Img        string `query:"img" json:"img"`

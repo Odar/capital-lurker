@@ -128,6 +128,26 @@ func (r *repo) DeleteUniversity(id uint64) (*string, error) {
 	return &ret, nil
 }
 
-func (r *repo) UpdateUniversity(id uint64) (*models.University, error) {
-	return nil, nil
+func (r *repo) UpdateUniversity(request api.PostIdRequest, id uint64) (*models.University, error) {
+	sql, args, err := r.builder.Update("university").
+		Set("name", request.Name).
+		Set("on_main_page", *request.OnMainPage).
+		Set("in_filter", *request.InFilter).
+		Set("updated_at", time.Now().UTC()).
+		Set("position", request.Position).
+		Set("img", request.Img).
+		Suffix("RETURNING *").
+		Where("id = ?", id).
+		ToSql()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+
+	res := &models.University{}
+	err = r.postgres.Get(res, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+	return res, nil
 }
