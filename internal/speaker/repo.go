@@ -63,7 +63,7 @@ func (r *repo) GetSpeakerForAdminFromDB(decodedParams *api.GetSpeakerForAdminReq
         "position":     true,
         "img":          true,
     }
-    if _, found := columnNames[decodedParams.SortBy]; (!found || decodedParams.SortBy == "") {
+    if _, found := columnNames[decodedParams.SortBy]; !found || decodedParams.SortBy == "" {
         decodedParams.SortBy = "id DESC"
     }
 
@@ -131,4 +131,32 @@ func (r *repo) GetSpeakerForAdminFromDB(decodedParams *api.GetSpeakerForAdminReq
     }
 
     return nil, 0, nil
+}
+
+func (r *repo) DeleteSpeakerForAdminFromDB(ID uint64) (string, error) {
+    sql, args, err := r.builder.Delete("*").
+        From("speaker").
+        Where("id = ?", ID).
+        ToSql()
+    if err != nil {
+        return "error", errors.Wrap(err, "can not build sql")
+    }
+
+    result, err := r.postgres.Exec(sql, args...)
+    if err != nil {
+        return "error", errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+    }
+
+    count, err := result.RowsAffected()
+    if err != nil {
+        return "error", errors.Wrapf(err, "can not estimate deleted rows")
+    }
+    if count == 1 {
+        return "deleted", nil
+    }
+    if count == 0 {
+        return "nothing", nil
+    }
+
+    return "error", errors.Wrapf(err, "more than one rows were deleted")
 }

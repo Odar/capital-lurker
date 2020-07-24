@@ -9,4 +9,5 @@ type Receiver interface {
 type Speaker interface {
     GetSpeakerOnMain(ctx echo.Context) error
     GetSpeakerForAdmin(ctx echo.Context) error
+    DeleteSpeakerForAdmin(ctx echo.Context) error
 }

@@ -4,6 +4,7 @@ import (
     "encoding/json"
     "github.com/Odar/capital-lurker/pkg/app/models"
     "net/http"
+    "strconv"
 
     "github.com/pkg/errors"
     "github.com/rs/zerolog/log"
@@ -89,4 +90,40 @@ func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakerForAdminRequest) ([]
     }
 
     return speakersForAdmin, count, nil
+}
+
+func (s *speaker) DeleteSpeakerForAdmin(ctx echo.Context) error {
+    var request api.DeleteSpeakerForAdminRequest
+    var err error
+    request.ID, err = strconv.ParseUint(ctx.Param("id"), 10, 64)
+    if err != nil {
+        log.Error().Err(err).Msgf("can not retrieve id:%+v", ctx.Param("id"))
+        return ctx.String(http.StatusBadRequest, err.Error())
+    }
+
+    var WHBD string
+    WHBD, err = s.deleteSpeakerForAdmin(&request)
+    if err != nil {
+        log.Error().Err(err).Msgf("can not delete speaker for admin with request %+v", request) // Maybe some problemsх
+        ctx.Response().WriteHeader(http.StatusInternalServerError)
+        return json.NewEncoder(ctx.Response()).Encode(api.DeleteSpeakerForAdminResponse{
+            WHBD: "error",
+            Error: err.Error(),
+        })
+    }
+
+    ctx.Response().WriteHeader(http.StatusOK)
+    return json.NewEncoder(ctx.Response()).Encode(api.DeleteSpeakerForAdminResponse{
+        WHBD: WHBD,
+        Error: "",
+    })
+}
+
+func (s *speaker) deleteSpeakerForAdmin(request *api.DeleteSpeakerForAdminRequest) (string, error) {
+    WHBD,  err := s.repo.DeleteSpeakerForAdminFromDB(request.ID)
+    if err != nil {
+        return WHBD, errors.Wrap(err, "can not delete from db")
+    }
+
+    return WHBD, nil
 }
