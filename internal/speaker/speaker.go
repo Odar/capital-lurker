@@ -2,6 +2,7 @@ package speaker
 
 import (
     "encoding/json"
+    "github.com/Odar/capital-lurker/pkg/app/models"
     "net/http"
 
     "github.com/pkg/errors"
@@ -53,4 +54,39 @@ func (s *speaker) getSpeakerOnMain(request api.GetSpeakerOnMainRequest) ([]api.S
     }
 
     return speakersOnMain, nil
+}
+
+func (s *speaker) GetSpeakerForAdmin(ctx echo.Context) error {
+    var request api.GetSpeakerForAdminRequest
+    err := ctx.Bind(&request)
+    if err != nil {
+        log.Error().Err(err).Msgf("can not retrieve data from JSON:%+v", request)
+        return ctx.String(http.StatusBadRequest, err.Error())
+    }
+
+    speakersForAdmin, count, err := s.getSpeakerForAdmin(&request)
+    if err != nil {
+        log.Error().Err(err).Msgf("can not get speaker for admin with request %+v", request)
+        return ctx.String(http.StatusInternalServerError, err.Error())
+    }
+
+    ctx.Response().WriteHeader(http.StatusOK)
+    return json.NewEncoder(ctx.Response()).Encode(api.GetSpeakerForAdminResponse{
+        Speakers: speakersForAdmin,
+        Count:    count,
+    })
+}
+
+func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakerForAdminRequest) ([]models.Speaker, uint64, error) {
+    speakersForAdmin, count, err := s.repo.GetSpeakerForAdminFromDB(request)
+    if err != nil {
+        return nil, 0, errors.Wrap(err, "can not get from db")
+    }
+
+    if speakersForAdmin == nil {
+        speakersForAdmin = make([]models.Speaker, 0)
+        count = 0
+    }
+
+    return speakersForAdmin, count, nil
 }
