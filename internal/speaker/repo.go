@@ -6,6 +6,7 @@ import (
     "github.com/Odar/capital-lurker/pkg/app/models"
     "github.com/jmoiron/sqlx"
     "github.com/pkg/errors"
+    "strings"
 )
 
 func NewRepo(postgres *sqlx.DB) *repo {
@@ -46,12 +47,13 @@ func (r *repo) GetSpeakerOnMainFromDB(limit int64) ([]api.SpeakerOnMain, error) 
     return nil, nil
 }
 
-func (r *repo) GetSpeakerForAdminFromDB(decodedParams *api.GetSpeakerForAdminRequest) ([]models.Speaker, uint64, error) {
-    if decodedParams.Limit <= 0 {
-        decodedParams.Limit = 10
+func (r *repo) GetSpeakersForAdminFromDB(limit int64, page int64, sortBy string, filter *api.SpeakerForAdminFilter) (
+    []models.Speaker, uint64, error) {
+    if limit <= 0 {
+        limit = 10
     }
-    if decodedParams.Page <= 0 {
-        decodedParams.Page = 1
+    if page <= 0 {
+        page = 1
     }
     var columnNames = map[string]bool{
         "id":           true,
@@ -63,71 +65,63 @@ func (r *repo) GetSpeakerForAdminFromDB(decodedParams *api.GetSpeakerForAdminReq
         "position":     true,
         "img":          true,
     }
-    if _, found := columnNames[decodedParams.SortBy]; (!found || decodedParams.SortBy == "") {
-        decodedParams.SortBy = "id DESC"
+    var orderByKeywords = map[string]bool{
+        "DESC": true,
+        "ASC":  true,
     }
-
-    filterId := decodedParams.Filter.ID
-    filterName := decodedParams.Filter.Name
-    filterOnMainPage := decodedParams.Filter.OnMainPage
-    filterInFilter := decodedParams.Filter.InFilter
-    filterAddedAtFrom := decodedParams.Filter.AddedAtRange.From
-    filterAddedAtTo := decodedParams.Filter.AddedAtRange.To
-    filterUpdatedAtFrom := decodedParams.Filter.UpdatedAtRange.From
-    filterUpdateAtTo := decodedParams.Filter.UpdatedAtRange.To
-    filterPosition := decodedParams.Filter.Position
-    filterImg := decodedParams.Filter.Img
+    words := strings.Split(sortBy, " ")
+    _, foundColumnName := columnNames[words[0]]
+    _, foundOrderByKeyword := orderByKeywords[words[1]]
+    if !foundColumnName || sortBy == "" || len(words) > 2 || !foundOrderByKeyword {
+        sortBy = "id DESC"
+    }
 
     speakersQuery := r.builder.Select("*").From("speaker")
-    if filterId != 0 {
-        speakersQuery = speakersQuery.Where("id = ?", filterId)
+    if filter.ID != 0 {
+        speakersQuery = speakersQuery.Where("id = ?", filter.ID)
     }
-    if filterName != "" {
-        speakersQuery = speakersQuery.Where("name LIKE ?", "%"+filterName+"%")
+    if filter.Name != "" {
+        speakersQuery = speakersQuery.Where("name LIKE ?", "%"+filter.Name+"%")
     }
-    if filterOnMainPage != nil {
-        speakersQuery = speakersQuery.Where("on_main_page = ?", *filterOnMainPage)
+    if filter.OnMainPage != nil {
+        speakersQuery = speakersQuery.Where("on_main_page = ?", *filter.OnMainPage)
     }
-    if filterInFilter != nil {
-        speakersQuery = speakersQuery.Where("in_filter = ?", *filterInFilter)
+    if filter.InFilter != nil {
+        speakersQuery = speakersQuery.Where("in_filter = ?", *filter.InFilter)
     }
-    if !filterAddedAtFrom.IsZero() {
-        speakersQuery = speakersQuery.Where("added_at >= ?", filterAddedAtFrom)
+    if !filter.AddedAtRange.From.IsZero() {
+        speakersQuery = speakersQuery.Where("added_at >= ?", filter.AddedAtRange.From)
     }
-    if !filterAddedAtTo.IsZero() {
-        speakersQuery = speakersQuery.Where("added_at < ?", filterAddedAtTo)
+    if !filter.AddedAtRange.To.IsZero() {
+        speakersQuery = speakersQuery.Where("added_at < ?", filter.AddedAtRange.To)
     }
-    if !filterUpdatedAtFrom.IsZero() {
-        speakersQuery = speakersQuery.Where("updated_at >= ?", filterUpdatedAtFrom)
+    if !filter.UpdatedAtRange.From.IsZero() {
+        speakersQuery = speakersQuery.Where("updated_at >= ?", filter.UpdatedAtRange.From)
     }
-    if !filterUpdateAtTo.IsZero() {
-        speakersQuery = speakersQuery.Where("updated_at < ?", filterUpdateAtTo)
+    if !filter.UpdatedAtRange.To.IsZero() {
+        speakersQuery = speakersQuery.Where("updated_at < ?", filter.UpdatedAtRange.To)
     }
-    if filterPosition != 0 {
-        speakersQuery = speakersQuery.Where("position = ?", filterPosition)
+    if filter.Position != 0 {
+        speakersQuery = speakersQuery.Where("position = ?", filter.Position)
     }
-    if filterImg != "" {
-        speakersQuery = speakersQuery.Where("img LIKE ?", "%"+filterImg+"%")
+    if filter.Img != "" {
+        speakersQuery = speakersQuery.Where("img LIKE ?", "%"+filter.Img+"%")
     }
 
-    sql, args, err := speakersQuery.ToSql()
+    sql, args, err := speakersQuery.Limit(uint64(limit)).ToSql()
 
     if err != nil {
         return nil, 0, errors.Wrap(err, "can not build sql")
     }
 
-    speakers := make([]models.Speaker, 0, decodedParams.Limit)
+    speakers := make([]models.Speaker, 0, limit)
     err = r.postgres.Select(&speakers, sql, args...)
     if err != nil {
         return nil, 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
     }
 
     if len(speakers) > 0 {
-        if int64(len(speakers)) > decodedParams.Limit {
-            return speakers[:decodedParams.Limit], uint64(decodedParams.Limit), nil
-        } else {
-            return speakers, uint64(len(speakers)), nil
-        }
+        return speakers, uint64(len(speakers)), nil
     }
 
     return nil, 0, nil

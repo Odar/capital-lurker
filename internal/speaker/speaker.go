@@ -56,8 +56,8 @@ func (s *speaker) getSpeakerOnMain(request api.GetSpeakerOnMainRequest) ([]api.S
     return speakersOnMain, nil
 }
 
-func (s *speaker) GetSpeakerForAdmin(ctx echo.Context) error {
-    var request api.GetSpeakerForAdminRequest
+func (s *speaker) GetSpeakersForAdmin(ctx echo.Context) error {
+    var request api.GetSpeakersForAdminRequest
     err := ctx.Bind(&request)
     if err != nil {
         log.Error().Err(err).Msgf("can not retrieve data from JSON:%+v", request)
@@ -71,21 +71,17 @@ func (s *speaker) GetSpeakerForAdmin(ctx echo.Context) error {
     }
 
     ctx.Response().WriteHeader(http.StatusOK)
-    return json.NewEncoder(ctx.Response()).Encode(api.GetSpeakerForAdminResponse{
+    return json.NewEncoder(ctx.Response()).Encode(api.GetSpeakersForAdminResponse{
         Speakers: speakersForAdmin,
         Count:    count,
     })
 }
 
-func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakerForAdminRequest) ([]models.Speaker, uint64, error) {
-    speakersForAdmin, count, err := s.repo.GetSpeakerForAdminFromDB(request)
+func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([]models.Speaker, uint64, error) {
+    speakersForAdmin, count, err := s.repo.GetSpeakersForAdminFromDB(request.Limit, request.Page, request.SortBy,
+        &request.Filter)
     if err != nil {
         return nil, 0, errors.Wrap(err, "can not get from db")
-    }
-
-    if speakersForAdmin == nil {
-        speakersForAdmin = make([]models.Speaker, 0)
-        count = 0
     }
 
     return speakersForAdmin, count, nil

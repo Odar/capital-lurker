@@ -38,14 +38,14 @@ type SpeakerForAdminFilter struct {
     Img            string             `json:"img"`
 }
 
-type GetSpeakerForAdminRequest struct {
+type GetSpeakersForAdminRequest struct {
     Limit  int64                 `json:"limit"`
     Page   int64                 `json:"page"`
     SortBy string                `json:"sortBy"`
     Filter SpeakerForAdminFilter `json:"filter"`
 }
 
-type GetSpeakerForAdminResponse struct {
+type GetSpeakersForAdminResponse struct {
     Speakers []models.Speaker `json:"speakers"`
     Count    uint64           `json:"count"`
 }
