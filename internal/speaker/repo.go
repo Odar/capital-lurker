@@ -63,7 +63,8 @@ func (r *repo) GetSpeakerForAdminFromDB(decodedParams *api.GetSpeakerForAdminReq
         "position":     true,
         "img":          true,
     }
-    if _, found := columnNames[decodedParams.SortBy]; !found || decodedParams.SortBy == "" {
+    _, found := columnNames[decodedParams.SortBy]
+    if !found || decodedParams.SortBy == "" {
         decodedParams.SortBy = "id DESC"
     }
 
