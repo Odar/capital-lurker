@@ -19,7 +19,7 @@ type repo struct {
     builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetSpeakerOnMainFromDB(limit int64) ([]api.SpeakerOnMain, error) {
+func (r *repo) GetSpeakersOnMainFromDB(limit int64) ([]api.SpeakerOnMain, error) {
     if limit <= 0 {
         return nil, errors.New("bad request; parameter: limit should be positive")
     }
@@ -27,6 +27,7 @@ func (r *repo) GetSpeakerOnMainFromDB(limit int64) ([]api.SpeakerOnMain, error) 
         From("speaker").
         Where("on_main_page = true").
         OrderBy("position DESC").
+        Limit(uint64(limit)).
         ToSql()
     if err != nil {
         return nil, errors.Wrap(err, "can not build sql")

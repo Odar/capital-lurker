@@ -7,5 +7,5 @@ type Receiver interface {
 }
 
 type Speaker interface {
-    GetSpeakerOnMain(ctx echo.Context) error
+    GetSpeakersOnMain(ctx echo.Context) error
 }

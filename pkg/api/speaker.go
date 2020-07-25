@@ -1,6 +1,6 @@
 package api
 
-type GetSpeakerOnMainRequest struct {
+type GetSpeakersOnMainRequest struct {
     Limit int64 `query:"limit"`
 }
 
@@ -11,6 +11,6 @@ type SpeakerOnMain struct {
     Img      string `json:"img"`
 }
 
-type GetSpeakerOnMainResponse struct {
+type GetSpeakersOnMainResponse struct {
     Speakers []SpeakerOnMain `json:"speakers"`
 }

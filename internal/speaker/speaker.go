@@ -23,33 +23,29 @@ type speaker struct {
     repo repositories.SpeakerRepo
 }
 
-func (s *speaker) GetSpeakerOnMain(ctx echo.Context) error {
-    var request api.GetSpeakerOnMainRequest
+func (s *speaker) GetSpeakersOnMain(ctx echo.Context) error {
+    var request api.GetSpeakersOnMainRequest
     err := ctx.Bind(&request)
     if err != nil {
         return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
     }
 
-    speakersOnMain, err := s.getSpeakerOnMain(request)
+    speakersOnMain, err := s.getSpeakersOnMain(request)
     if err != nil {
-        log.Error().Err(err).Msgf("can not get speaker on main with request %+v", request)
+        log.Error().Err(err).Msgf("can not get speakers on main with request %+v", request)
         return ctx.String(http.StatusInternalServerError, err.Error())
     }
 
     ctx.Response().WriteHeader(http.StatusOK)
-    return json.NewEncoder(ctx.Response()).Encode(api.GetSpeakerOnMainResponse{
+    return json.NewEncoder(ctx.Response()).Encode(api.GetSpeakersOnMainResponse{
         Speakers: speakersOnMain,
     })
 }
 
-func (s *speaker) getSpeakerOnMain(request api.GetSpeakerOnMainRequest) ([]api.SpeakerOnMain, error) {
-    speakersOnMain, err := s.repo.GetSpeakerOnMainFromDB(request.Limit)
+func (s *speaker) getSpeakersOnMain(request api.GetSpeakersOnMainRequest) ([]api.SpeakerOnMain, error) {
+    speakersOnMain, err := s.repo.GetSpeakersOnMainFromDB(request.Limit)
     if err != nil {
         return nil, errors.Wrap(err, "can not get from db")
-    }
-
-    if speakersOnMain == nil {
-        speakersOnMain = make([]api.SpeakerOnMain, 0)
     }
 
     return speakersOnMain, nil
