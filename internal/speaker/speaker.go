@@ -3,11 +3,10 @@ package speaker
 import (
     "encoding/json"
     "github.com/Odar/capital-lurker/pkg/app/models"
-    "net/http"
-    "strconv"
-
     "github.com/pkg/errors"
     "github.com/rs/zerolog/log"
+    "net/http"
+    "strconv"
 
     "github.com/Odar/capital-lurker/pkg/app/repositories"
 
@@ -104,26 +103,59 @@ func (s *speaker) DeleteSpeakerForAdmin(ctx echo.Context) error {
     var WHBD string
     WHBD, err = s.deleteSpeakerForAdmin(&request)
     if err != nil {
-        log.Error().Err(err).Msgf("can not delete speaker for admin with request %+v", request) // Maybe some problemsх
+        log.Error().Err(err).Msgf("can not delete speaker for admin with request %+v", request)
         ctx.Response().WriteHeader(http.StatusInternalServerError)
         return json.NewEncoder(ctx.Response()).Encode(api.DeleteSpeakerForAdminResponse{
-            WHBD: "error",
+            WHBD:  "error",
             Error: err.Error(),
         })
     }
 
     ctx.Response().WriteHeader(http.StatusOK)
     return json.NewEncoder(ctx.Response()).Encode(api.DeleteSpeakerForAdminResponse{
-        WHBD: WHBD,
+        WHBD:  WHBD,
         Error: "",
     })
 }
 
 func (s *speaker) deleteSpeakerForAdmin(request *api.DeleteSpeakerForAdminRequest) (string, error) {
-    WHBD,  err := s.repo.DeleteSpeakerForAdminFromDB(request.ID)
+    WHBD, err := s.repo.DeleteSpeakerForAdminFromDB(request.ID)
     if err != nil {
         return WHBD, errors.Wrap(err, "can not delete from db")
     }
 
     return WHBD, nil
+}
+
+func (s *speaker) UpdateSpeakerForAdmin(ctx echo.Context) error {
+    var request api.UpdateSpeakerForAdminRequest
+    err := ctx.Bind(&request)
+    if err != nil {
+        log.Error().Err(err).Msgf("can not retrieve data from JSON:%+v", request)
+        return ctx.String(http.StatusBadRequest, err.Error())
+    }
+    requestID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+    if err != nil {
+        log.Error().Err(err).Msgf("can not retrieve id:%+v", ctx.Param("id"))
+        return ctx.String(http.StatusBadRequest, err.Error())
+    }
+
+    updateSpeaker, err := s.updateSpeakerForAdmin(requestID, &request)
+    if err != nil {
+        log.Error().Err(err).Msgf("can not update speaker for admin with request %+v", request)
+        ctx.Response().WriteHeader(http.StatusInternalServerError)
+    }
+
+    ctx.Response().WriteHeader(http.StatusOK)
+    return json.NewEncoder(ctx.Response()).Encode(updateSpeaker)
+}
+
+func (s *speaker) updateSpeakerForAdmin(requestID uint64, request *api.UpdateSpeakerForAdminRequest) (
+    *models.Speaker, error) {
+    updateSpeaker, err := s.repo.UpdateSpeakerForAdminInDB(requestID, request)
+    if err != nil {
+        return updateSpeaker, errors.Wrap(err, "can not update in db")
+    }
+
+    return updateSpeaker, nil
 }

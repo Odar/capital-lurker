@@ -1,6 +1,8 @@
 package speaker
 
 import (
+    "time"
+
     "github.com/Masterminds/squirrel"
     "github.com/Odar/capital-lurker/pkg/api"
     "github.com/Odar/capital-lurker/pkg/app/models"
@@ -160,4 +162,29 @@ func (r *repo) DeleteSpeakerForAdminFromDB(ID uint64) (string, error) {
     }
 
     return "error", errors.Wrapf(err, "more than one rows were deleted")
+}
+
+func (r *repo) UpdateSpeakerForAdminInDB(ID uint64, request *api.UpdateSpeakerForAdminRequest) (
+    *models.Speaker, error) {
+    sql, args, err := r.builder.Update("speaker").
+        Set("name", request.Name).
+        Set("on_main_page", request.OnMainPage).
+        Set("in_filter", request.InFilter).
+        Set("updated_at", time.Now().UTC()).
+        Set("position", request.Position).
+        Set("img", request.Img).
+        Suffix("RETURNING *").
+        Where("id = ?", ID).
+        ToSql()
+    if err != nil {
+        return nil, errors.Wrap(err, "can not build sql")
+    }
+
+    updateSpeaker := &models.Speaker{}
+    err = r.postgres.Get(updateSpeaker, sql, args...)
+    if err != nil {
+        return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+    }
+
+    return updateSpeaker, nil
 }

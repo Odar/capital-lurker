@@ -10,4 +10,5 @@ type Speaker interface {
     GetSpeakerOnMain(ctx echo.Context) error
     GetSpeakerForAdmin(ctx echo.Context) error
     DeleteSpeakerForAdmin(ctx echo.Context) error
+    UpdateSpeakerForAdmin(ctx echo.Context) error
 }
