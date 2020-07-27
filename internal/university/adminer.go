@@ -48,28 +48,18 @@ func (a *adminer) GetUniversitiesList(ctx echo.Context) error {
 }
 
 func (a *adminer) getUniversitiesList(request api.PostRequest) ([]models.University, error) {
-	universities, err := a.repo.GetUniversities(request.Filter, request.SortBy)
+	if request.Limit <= 0 {
+		request.Limit = 10
+	}
+	if request.Page <= 0 {
+		request.Page = 1
+	}
+	universities, err := a.repo.GetUniversities(request)
 	if err != nil {
 		return nil, errors.Wrap(err, "can not get from universities list")
 	}
 	if universities == nil {
 		return nil, err
 	}
-
-	limit, page := request.Limit, request.Page
-	if limit <= 0 {
-		limit = 10
-	}
-	if page <= 0 {
-		page = 1
-	}
-	if page > 1+len(universities)/limit {
-		return nil, errors.New("no such page")
-	}
-
-	model := make([]models.University, 0, limit)
-	for i := 0; i < limit && (page-1)*limit+i < len(universities); i++ {
-		model = append(model, universities[(page-1)*limit+i])
-	}
-	return model, err
+	return universities, err
 }

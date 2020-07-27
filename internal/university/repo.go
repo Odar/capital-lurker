@@ -20,7 +20,8 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.University, error) {
+func (r *repo) GetUniversities(request api.PostRequest) ([]models.University, error) {
+	filter := request.Filter
 	base := r.builder.Select("*").From("university")
 	filtered := base
 	if filter != nil {
@@ -51,13 +52,18 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 	}
 
 	sorted := filtered
-	switch sortBy {
+	switch request.SortBy {
 	case "":
 		sorted = sorted.OrderBy("id DESC")
 	default:
-		sorted = sorted.OrderBy(sortBy)
+		sorted = sorted.OrderBy(request.SortBy)
 	}
-	sql, args, err := sorted.ToSql()
+
+	paged := sorted
+	paged = paged.Limit(uint64(request.Limit))
+	paged = paged.Offset(uint64((request.Page - 1) * request.Limit))
+
+	sql, args, err := paged.ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}

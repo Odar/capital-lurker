@@ -6,5 +6,5 @@ import (
 )
 
 type AdminerRepo interface {
-	GetUniversities(filter *api.Filter, sortBy string) ([]models.University, error)
+	GetUniversities(request api.PostRequest) ([]models.University, error)
 }
