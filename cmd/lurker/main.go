@@ -23,8 +23,8 @@ func main() {
 	receiverRepo := receiver.NewRepo(capitalDB)
 	receiverService := receiver.New(receiverRepo)
 
-	universityAdminerRepo := university.NewRepo(capitalDB)
-	universityAdminerServise := university.New(universityAdminerRepo)
+	universityRepo := university.NewRepo(capitalDB)
+	universityAdminerServise := university.New(universityRepo)
 
 	srv := server.New(cfg.Server, receiverService, universityAdminerServise)
 	err = srv.Init()

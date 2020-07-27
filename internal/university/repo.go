@@ -22,10 +22,7 @@ type repo struct {
 
 func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.University, error) {
 	base := r.builder.Select("*").From("university")
-
-	//adding filters
 	filtered := base
-
 	if filter != nil {
 		if filter.Id != 0 { //add fix to query: id starts from 1
 			filtered = filtered.Where("id = ?", filter.Id)
@@ -60,24 +57,18 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 	default:
 		sorted = sorted.OrderBy(sortBy)
 	}
-
 	sql, args, err := sorted.ToSql()
-
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
-
 	size := 0 // size of content
 	content := make([]models.University, size)
 	err = r.postgres.Select(&content, sql, args...)
-
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
-
 	if len(content) > 0 {
 		return content, nil
 	}
-
 	return nil, nil
 }
