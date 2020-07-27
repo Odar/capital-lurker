@@ -140,22 +140,22 @@ func (s *speaker) UpdateSpeakerForAdmin(ctx echo.Context) error {
         return ctx.String(http.StatusBadRequest, err.Error())
     }
 
-    updateSpeaker, err := s.updateSpeakerForAdmin(requestID, &request)
+    updatedSpeaker, err := s.updateSpeakerForAdmin(requestID, &request)
     if err != nil {
         log.Error().Err(err).Msgf("can not update speaker for admin with request %+v", request)
         ctx.Response().WriteHeader(http.StatusInternalServerError)
     }
 
     ctx.Response().WriteHeader(http.StatusOK)
-    return json.NewEncoder(ctx.Response()).Encode(updateSpeaker)
+    return json.NewEncoder(ctx.Response()).Encode(updatedSpeaker)
 }
 
 func (s *speaker) updateSpeakerForAdmin(requestID uint64, request *api.UpdateSpeakerForAdminRequest) (
     *models.Speaker, error) {
-    updateSpeaker, err := s.repo.UpdateSpeakerForAdminInDB(requestID, request)
+    updatedSpeaker, err := s.repo.UpdateSpeakerForAdminInDB(requestID, request)
     if err != nil {
-        return updateSpeaker, errors.Wrap(err, "can not update in db")
+        return updatedSpeaker, errors.Wrap(err, "can not update in db")
     }
 
-    return updateSpeaker, nil
+    return updatedSpeaker, nil
 }
