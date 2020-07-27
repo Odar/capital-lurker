@@ -188,3 +188,23 @@ func (r *repo) UpdateSpeakerForAdminInDB(ID uint64, request *api.UpdateSpeakerFo
 
     return updateSpeaker, nil
 }
+
+func (r *repo) AddSpeakerForAdminInDB(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error) {
+    sql, args, err := r.builder.Insert("speaker").
+        Columns("name", "on_main_page", "in_filter", "added_at", "updated_at", "position", "img").
+        Values(request.Name, request.OnMainPage, request.InFilter, time.Now().UTC(), time.Now().UTC(),
+            request.Position, request.Img).
+        Suffix("RETURNING *").
+        ToSql()
+    if err != nil {
+        return nil, errors.Wrap(err, "can not build sql")
+    }
+
+    addedSpeaker := &models.Speaker{}
+    err = r.postgres.Get(addedSpeaker, sql, args...)
+    if err != nil {
+        return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+    }
+
+    return addedSpeaker, nil
+}
