@@ -20,9 +20,7 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetUniversities(request api.PostRequest) ([]models.University, error) {
-	filter := request.Filter
-	base := r.builder.Select("*").From("university")
+func MakeFilters(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
 	filtered := base
 	if filter != nil {
 		if filter.Id != 0 { //add fix to query: id starts from 1
@@ -50,6 +48,13 @@ func (r *repo) GetUniversities(request api.PostRequest) ([]models.University, er
 			filtered = filtered.Where("img LIKE %?%", filter.Img)
 		}
 	}
+	return filtered
+}
+
+func (r *repo) GetUniversities(request api.PostRequest) ([]models.University, error) {
+	filter := request.Filter
+	base := r.builder.Select("*").From("university")
+	filtered := MakeFilters(base, filter)
 
 	sorted := filtered
 	switch request.SortBy {
