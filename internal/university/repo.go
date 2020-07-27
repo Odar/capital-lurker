@@ -27,7 +27,7 @@ func MakeFilters(base squirrel.SelectBuilder, filter *api.Filter) squirrel.Selec
 			filtered = filtered.Where("id = ?", filter.Id)
 		}
 		if filter.Name != "" {
-			filtered = filtered.Where("name LIKE %?%", filter.Name)
+			filtered = filtered.Where("name LIKE ?", "%"+filter.Name+"%")
 		}
 		if filter.OnMainPage != nil { //how to parse blanks?
 			filtered = filtered.Where("on_main_page = ?", *filter.OnMainPage)
@@ -45,7 +45,7 @@ func MakeFilters(base squirrel.SelectBuilder, filter *api.Filter) squirrel.Selec
 			filtered = filtered.Where("position = ?", filter.Position)
 		}
 		if filter.Img != "" {
-			filtered = filtered.Where("img LIKE %?%", filter.Img)
+			filtered = filtered.Where("img LIKE ?", "%"+filter.Img+"%")
 		}
 	}
 	return filtered
