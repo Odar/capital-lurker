@@ -85,7 +85,7 @@ func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([
 		return nil, 0, errors.Wrap(err, "can not get speakers from db")
 	}
 
-	count, err := s.repo.CountSpeakersForAdmin(request.Page, request.SortBy, &request.Filter)
+	count, err := s.repo.CountSpeakersForAdmin(&request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not count speakers from db")
 	}

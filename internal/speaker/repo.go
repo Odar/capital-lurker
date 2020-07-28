@@ -50,7 +50,7 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 	sortBy = validateSortByParameter(sortBy)
 
 	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("*").From("speaker"))
-	sql, args, err := speakersQuery.Limit(uint64(limit)).Offset(uint64(page)).OrderBy(sortBy).ToSql()
+	sql, args, err := speakersQuery.Limit(uint64(limit)).Offset(uint64((page - 1) * limit)).OrderBy(sortBy).ToSql()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
@@ -65,23 +65,21 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 	return speakers, nil
 }
 
-func (r *repo) CountSpeakersForAdmin(page int64, sortBy string, filter *api.SpeakerForAdminFilter) (uint64, error) {
-	sortBy = validateSortByParameter(sortBy)
-
-	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("*").From("speaker"))
-	sql, args, err := speakersQuery.Offset(uint64(page)).OrderBy(sortBy).ToSql()
+func (r *repo) CountSpeakersForAdmin(filter *api.SpeakerForAdminFilter) (uint64, error) {
+	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("count(*)").From("speaker"))
+	sql, args, err := speakersQuery.ToSql()
 
 	if err != nil {
 		return 0, errors.Wrap(err, "can not build sql")
 	}
 
-	speakers := make([]models.Speaker, 0)
-	err = r.postgres.Select(&speakers, sql, args...)
+	var count []uint64
+	err = r.postgres.Select(&count, sql, args...)
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	return uint64(len(speakers)), nil
+	return count[0], nil
 }
 
 func validateFilterGetSpeakerForAdmin(filter *api.SpeakerForAdminFilter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
