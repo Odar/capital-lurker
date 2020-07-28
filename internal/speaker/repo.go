@@ -71,44 +71,20 @@ func (r *repo) GetSpeakersForAdminFromDB(limit int64, page int64, sortBy string,
     }
     words := strings.Split(sortBy, " ")
     _, foundColumnName := columnNames[words[0]]
-    _, foundOrderByKeyword := orderByKeywords[words[1]]
-    if !foundColumnName || sortBy == "" || len(words) > 2 || !foundOrderByKeyword {
-        sortBy = "id DESC"
+    if len(words) == 1 {
+        if !foundColumnName {
+            sortBy = "id DESC"
+        }
+    } else {
+        _, foundOrderByKeyword := orderByKeywords[words[1]]
+        if !foundColumnName || sortBy == "" || len(words) > 2 || !foundOrderByKeyword {
+            sortBy = "id DESC"
+        }
     }
 
-    speakersQuery := r.builder.Select("*").From("speaker")
-    if filter.ID != 0 {
-        speakersQuery = speakersQuery.Where("id = ?", filter.ID)
-    }
-    if filter.Name != "" {
-        speakersQuery = speakersQuery.Where("name LIKE ?", "%"+filter.Name+"%")
-    }
-    if filter.OnMainPage != nil {
-        speakersQuery = speakersQuery.Where("on_main_page = ?", *filter.OnMainPage)
-    }
-    if filter.InFilter != nil {
-        speakersQuery = speakersQuery.Where("in_filter = ?", *filter.InFilter)
-    }
-    if !filter.AddedAtRange.From.IsZero() {
-        speakersQuery = speakersQuery.Where("added_at >= ?", filter.AddedAtRange.From)
-    }
-    if !filter.AddedAtRange.To.IsZero() {
-        speakersQuery = speakersQuery.Where("added_at < ?", filter.AddedAtRange.To)
-    }
-    if !filter.UpdatedAtRange.From.IsZero() {
-        speakersQuery = speakersQuery.Where("updated_at >= ?", filter.UpdatedAtRange.From)
-    }
-    if !filter.UpdatedAtRange.To.IsZero() {
-        speakersQuery = speakersQuery.Where("updated_at < ?", filter.UpdatedAtRange.To)
-    }
-    if filter.Position != 0 {
-        speakersQuery = speakersQuery.Where("position = ?", filter.Position)
-    }
-    if filter.Img != "" {
-        speakersQuery = speakersQuery.Where("img LIKE ?", "%"+filter.Img+"%")
-    }
+    speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("*").From("speaker"))
 
-    sql, args, err := speakersQuery.Limit(uint64(limit)).ToSql()
+    sql, args, err := speakersQuery.Limit(uint64(limit)).OrderBy(sortBy).ToSql()
 
     if err != nil {
         return nil, 0, errors.Wrap(err, "can not build sql")
@@ -125,4 +101,38 @@ func (r *repo) GetSpeakersForAdminFromDB(limit int64, page int64, sortBy string,
     }
 
     return nil, 0, nil
+}
+
+func validateFilterGetSpeakerForAdmin(filter *api.SpeakerForAdminFilter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
+    if filter.ID != 0 {
+        query = query.Where("id = ?", filter.ID)
+    }
+    if filter.Name != "" {
+        query = query.Where("name LIKE ?", "%"+filter.Name+"%")
+    }
+    if filter.OnMainPage != nil {
+        query = query.Where("on_main_page = ?", *filter.OnMainPage)
+    }
+    if filter.InFilter != nil {
+        query = query.Where("in_filter = ?", *filter.InFilter)
+    }
+    if !filter.AddedAtRange.From.IsZero() {
+        query = query.Where("added_at >= ?", filter.AddedAtRange.From)
+    }
+    if !filter.AddedAtRange.To.IsZero() {
+        query = query.Where("added_at < ?", filter.AddedAtRange.To)
+    }
+    if !filter.UpdatedAtRange.From.IsZero() {
+        query = query.Where("updated_at >= ?", filter.UpdatedAtRange.From)
+    }
+    if !filter.UpdatedAtRange.To.IsZero() {
+        query = query.Where("updated_at < ?", filter.UpdatedAtRange.To)
+    }
+    if filter.Position != 0 {
+        query = query.Where("position = ?", filter.Position)
+    }
+    if filter.Img != "" {
+        query = query.Where("img LIKE ?", "%"+filter.Img+"%")
+    }
+    return query
 }
