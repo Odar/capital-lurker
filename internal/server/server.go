@@ -10,13 +10,14 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func New(cfg *Config, receiver app.Receiver) *server {
+func New(cfg *Config, receiver app.Receiver, speaker app.Speaker) *server {
 	e := echo.New()
 	e.Server.Addr = fmt.Sprintf(":%d", cfg.Port)
 
 	return &server{
 		echo:     e,
 		receiver: receiver,
+		speaker:  speaker,
 		cfg:      cfg,
 	}
 }
@@ -24,6 +25,7 @@ func New(cfg *Config, receiver app.Receiver) *server {
 type server struct {
 	echo     *echo.Echo
 	receiver app.Receiver
+	speaker  app.Speaker
 	cfg      *Config
 }
 
