@@ -2,8 +2,8 @@ package speaker
 
 import (
 	"encoding/json"
-    "github.com/labstack/echo/v4"
-    "net/http"
+	"github.com/labstack/echo/v4"
+	"net/http"
 
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
@@ -41,7 +41,7 @@ func (s *speaker) GetSpeakersOnMain(ctx echo.Context) error {
 }
 
 func (s *speaker) getSpeakersOnMain(request api.GetSpeakersOnMainRequest) ([]api.SpeakerOnMain, error) {
-	speakersOnMain, err := s.repo.GetSpeakersOnMainFromDB(request.Limit)
+	speakersOnMain, err := s.repo.GetSpeakersOnMain(request.Limit)
 	if err != nil {
 		return nil, errors.Wrap(err, "can not get from db")
 	}
