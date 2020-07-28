@@ -41,10 +41,10 @@ func (s *speaker) GetSpeakersOnMain(ctx echo.Context) error {
 }
 
 func (s *speaker) getSpeakersOnMain(request api.GetSpeakersOnMainRequest) ([]api.SpeakerOnMain, error) {
-	speakersOnMain, err := s.repo.GetSpeakersOnMain(request.Limit)
+	speakers, err := s.repo.GetSpeakersOnMain(request.Limit)
 	if err != nil {
 		return nil, errors.Wrap(err, "can not get from db")
 	}
 
-	return speakersOnMain, nil
+	return speakers, nil
 }
