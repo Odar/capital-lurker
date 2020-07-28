@@ -28,7 +28,7 @@ func (s *speaker) GetSpeakersOnMain(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	speakersOnMain, err := s.getSpeakersOnMain(request)
+	speakers, err := s.getSpeakersOnMain(request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get speakers on main with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -36,7 +36,7 @@ func (s *speaker) GetSpeakersOnMain(ctx echo.Context) error {
 
 	ctx.Response().WriteHeader(http.StatusOK)
 	return json.NewEncoder(ctx.Response()).Encode(api.GetSpeakersOnMainResponse{
-		Speakers: speakersOnMain,
+		Speakers: speakers,
 	})
 }
 
