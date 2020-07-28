@@ -4,6 +4,7 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
+	"github.com/Odar/capital-lurker/pkg/app/repositories"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -20,7 +21,53 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func MakeFilters(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
+func (r *repo) GetUniversities(filter *api.Filter, sortBy string, limit, page int) (*repositories.GetUniversitiesRepoResponse, error) {
+	base := r.builder.Select("*").From("university")
+	filtered := applyFilter(base, filter)
+
+	sorted := filtered
+	switch sortBy {
+	case "":
+		sorted = sorted.OrderBy("id DESC")
+	default:
+		sorted = sorted.OrderBy(sortBy)
+	}
+
+	paged := sorted
+	paged = paged.Limit(uint64(limit))
+	paged = paged.Offset(uint64((page - 1) * limit))
+
+	sql, args, err := paged.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+	content := make([]models.University, 0)
+	err = r.postgres.Select(&content, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	getCount := applyFilter(r.builder.Select("count(*)").From("university"), filter)
+	sql, args, err = getCount.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+	var count []uint64
+	err = r.postgres.Select(&count, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	if len(content) > 0 {
+		return &repositories.GetUniversitiesRepoResponse{
+			Universities: content,
+			Count:        count[0],
+		}, nil
+	}
+	return nil, nil
+}
+
+func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
 	filtered := base
 	if filter != nil {
 		if filter.Id != 0 { //add fix to query: id starts from 1
@@ -49,37 +96,4 @@ func MakeFilters(base squirrel.SelectBuilder, filter *api.Filter) squirrel.Selec
 		}
 	}
 	return filtered
-}
-
-func (r *repo) GetUniversities(request api.PostRequest) ([]models.University, error) {
-	filter := request.Filter
-	base := r.builder.Select("*").From("university")
-	filtered := MakeFilters(base, filter)
-
-	sorted := filtered
-	switch request.SortBy {
-	case "":
-		sorted = sorted.OrderBy("id DESC")
-	default:
-		sorted = sorted.OrderBy(request.SortBy)
-	}
-
-	paged := sorted
-	paged = paged.Limit(uint64(request.Limit))
-	paged = paged.Offset(uint64((request.Page - 1) * request.Limit))
-
-	sql, args, err := paged.ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "can not build sql")
-	}
-	size := 0 // size of content
-	content := make([]models.University, size)
-	err = r.postgres.Select(&content, sql, args...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
-	}
-	if len(content) > 0 {
-		return content, nil
-	}
-	return nil, nil
 }

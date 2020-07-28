@@ -42,19 +42,19 @@ func (a *adminer) GetUniversitiesList(ctx echo.Context) error {
 		})
 	}
 	return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
-		Universities: model,
-		Count:        uint64(len(model)),
+		Universities: model.Universities,
+		Count:        model.Count,
 	})
 }
 
-func (a *adminer) getUniversitiesList(request api.PostRequest) ([]models.University, error) {
+func (a *adminer) getUniversitiesList(request api.PostRequest) (*repositories.GetUniversitiesRepoResponse, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
 	if request.Page <= 0 {
 		request.Page = 1
 	}
-	universities, err := a.repo.GetUniversities(request)
+	universities, err := a.repo.GetUniversities(request.Filter, request.SortBy, request.Limit, request.Page)
 	if err != nil {
 		return nil, errors.Wrap(err, "can not get from universities list")
 	}

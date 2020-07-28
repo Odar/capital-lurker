@@ -5,6 +5,11 @@ import (
 	"github.com/Odar/capital-lurker/pkg/app/models"
 )
 
+type GetUniversitiesRepoResponse struct {
+	Universities []models.University
+	Count        uint64
+}
+
 type AdminerRepo interface {
-	GetUniversities(request api.PostRequest) ([]models.University, error)
+	GetUniversities(filter *api.Filter, sortBy string, limit, page int) (*GetUniversitiesRepoResponse, error)
 }
