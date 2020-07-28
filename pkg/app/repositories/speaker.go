@@ -7,6 +7,7 @@ import (
 
 type SpeakerRepo interface {
 	GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error)
-	GetSpeakersForAdminFromDB(limit int64, page int64, sortBy string, filter *api.SpeakerForAdminFilter) (
-		[]models.Speaker, uint64, error)
+	GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.SpeakerForAdminFilter) ([]models.Speaker,
+		error)
+	CountSpeakersForAdmin(page int64, sortBy string, filter *api.SpeakerForAdminFilter) (uint64, error)
 }

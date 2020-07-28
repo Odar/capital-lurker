@@ -45,60 +45,43 @@ func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 	return speakers, nil
 }
 
-func (r *repo) GetSpeakersForAdminFromDB(limit int64, page int64, sortBy string, filter *api.SpeakerForAdminFilter) (
-	[]models.Speaker, uint64, error) {
-	if limit <= 0 {
-		limit = 10
-	}
-	if page <= 0 {
-		page = 1
-	}
-	var columnNames = map[string]bool{
-		"id":           true,
-		"name":         true,
-		"on_main_page": true,
-		"in_filter":    true,
-		"added_at":     true,
-		"updated_at":   true,
-		"position":     true,
-		"img":          true,
-	}
-	var orderByKeywords = map[string]bool{
-		"DESC": true,
-		"ASC":  true,
-	}
-	words := strings.Split(sortBy, " ")
-	_, foundColumnName := columnNames[words[0]]
-	if len(words) == 1 {
-		if !foundColumnName {
-			sortBy = "id DESC"
-		}
-	} else {
-		_, foundOrderByKeyword := orderByKeywords[words[1]]
-		if !foundColumnName || sortBy == "" || len(words) > 2 || !foundOrderByKeyword {
-			sortBy = "id DESC"
-		}
-	}
+func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.SpeakerForAdminFilter) (
+	[]models.Speaker, error) {
+	sortBy = validateSortByParameter(sortBy)
 
 	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("*").From("speaker"))
-
-	sql, args, err := speakersQuery.Limit(uint64(limit)).OrderBy(sortBy).ToSql()
+	sql, args, err := speakersQuery.Limit(uint64(limit)).Offset(uint64(page)).OrderBy(sortBy).ToSql()
 
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "can not build sql")
+		return nil, errors.Wrap(err, "can not build sql")
 	}
 
 	speakers := make([]models.Speaker, 0, limit)
 	err = r.postgres.Select(&speakers, sql, args...)
 	if err != nil {
-		return nil, 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	if len(speakers) > 0 {
-		return speakers, uint64(len(speakers)), nil
+	return speakers, nil
+}
+
+func (r *repo) CountSpeakersForAdmin(page int64, sortBy string, filter *api.SpeakerForAdminFilter) (uint64, error) {
+	sortBy = validateSortByParameter(sortBy)
+
+	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("*").From("speaker"))
+	sql, args, err := speakersQuery.Offset(uint64(page)).OrderBy(sortBy).ToSql()
+
+	if err != nil {
+		return 0, errors.Wrap(err, "can not build sql")
 	}
 
-	return nil, 0, nil
+	speakers := make([]models.Speaker, 0)
+	err = r.postgres.Select(&speakers, sql, args...)
+	if err != nil {
+		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	return uint64(len(speakers)), nil
 }
 
 func validateFilterGetSpeakerForAdmin(filter *api.SpeakerForAdminFilter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
@@ -133,4 +116,35 @@ func validateFilterGetSpeakerForAdmin(filter *api.SpeakerForAdminFilter, query s
 		query = query.Where("img LIKE ?", "%"+filter.Img+"%")
 	}
 	return query
+}
+
+func validateSortByParameter(sortBy string) string {
+	var columnNames = map[string]bool{
+		"id":           true,
+		"name":         true,
+		"on_main_page": true,
+		"in_filter":    true,
+		"added_at":     true,
+		"updated_at":   true,
+		"position":     true,
+		"img":          true,
+	}
+	var orderByKeywords = map[string]bool{
+		"DESC": true,
+		"ASC":  true,
+	}
+	words := strings.Split(sortBy, " ")
+	_, foundColumnName := columnNames[words[0]]
+	if len(words) == 1 {
+		if !foundColumnName {
+			sortBy = "id DESC"
+		}
+	} else {
+		_, foundOrderByKeyword := orderByKeywords[words[1]]
+		if !foundColumnName || sortBy == "" || len(words) > 2 || !foundOrderByKeyword {
+			sortBy = "id DESC"
+		}
+	}
+
+	return sortBy
 }

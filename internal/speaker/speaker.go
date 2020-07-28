@@ -73,11 +73,22 @@ func (s *speaker) GetSpeakersForAdmin(ctx echo.Context) error {
 }
 
 func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([]models.Speaker, uint64, error) {
-	speakersForAdmin, count, err := s.repo.GetSpeakersForAdminFromDB(request.Limit, request.Page, request.SortBy,
-		&request.Filter)
-	if err != nil {
-		return nil, 0, errors.Wrap(err, "can not get from db")
+	if request.Limit <= 0 {
+		request.Limit = 10
+	}
+	if request.Page <= 0 {
+		request.Page = 1
 	}
 
-	return speakersForAdmin, count, nil
+	speakers, err := s.repo.GetSpeakersForAdmin(request.Limit, request.Page, request.SortBy, &request.Filter)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "can not get speakers from db")
+	}
+
+	count, err := s.repo.CountSpeakersForAdmin(request.Page, request.SortBy, &request.Filter)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "can not count speakers from db")
+	}
+
+	return speakers, count, nil
 }
