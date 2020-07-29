@@ -29,20 +29,20 @@ func (a *adminer) GetUniversitiesList(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	model, count, err := a.getUniversitiesList(request)
+	universities, count, err := a.getUniversitiesList(request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get universities list with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
-	if model == nil {
+	if universities == nil {
 		return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
 			Universities: []models.University{},
 			Count:        0,
 		})
 	}
 	return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
-		Universities: model,
+		Universities: universities,
 		Count:        count,
 	})
 }
