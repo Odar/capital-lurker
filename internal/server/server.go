@@ -10,23 +10,25 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func New(cfg *Config, receiver app.Receiver, speaker app.Speaker) *server {
+func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdminer app.UniversityAdminer) *server {
 	e := echo.New()
 	e.Server.Addr = fmt.Sprintf(":%d", cfg.Port)
 
 	return &server{
-		echo:     e,
-		receiver: receiver,
-		speaker:  speaker,
-		cfg:      cfg,
+		echo:              e,
+		receiver:          receiver,
+		speaker:           speaker,
+		universityAdminer: universityAdminer,
+		cfg:               cfg,
 	}
 }
 
 type server struct {
-	echo     *echo.Echo
-	receiver app.Receiver
-	speaker  app.Speaker
-	cfg      *Config
+	echo              *echo.Echo
+	receiver          app.Receiver
+	universityAdminer app.UniversityAdminer
+	speaker           app.Speaker
+	cfg               *Config
 }
 
 func (s *server) Init() error {
