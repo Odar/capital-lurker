@@ -73,13 +73,13 @@ func (r *repo) CountSpeakersForAdmin(filter *api.SpeakerForAdminFilter) (uint64,
 		return 0, errors.Wrap(err, "can not build sql")
 	}
 
-	var count []uint64
-	err = r.postgres.Select(&count, sql, args...)
+	var count uint64
+	err = r.postgres.Get(&count, sql, args...)
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	return count[0], nil
+	return count, nil
 }
 
 func validateFilterGetSpeakerForAdmin(filter *api.SpeakerForAdminFilter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
