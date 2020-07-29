@@ -59,7 +59,7 @@ func (a *adminer) getUniversitiesList(request api.PostRequest) ([]models.Univers
 		return nil, 0, errors.Wrap(err, "can not get from universities list")
 	}
 
-	count, err := a.repo.GetUniversitiesCount(request.Filter)
+	count, err := a.repo.CountUniversities(request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not get universities count")
 	}
