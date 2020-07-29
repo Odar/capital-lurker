@@ -29,7 +29,7 @@ func (a *adminer) GetUniversitiesList(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	model, err := a.getUniversitiesList(request)
+	model, count, err := a.getUniversitiesList(request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get universities list with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -42,24 +42,29 @@ func (a *adminer) GetUniversitiesList(ctx echo.Context) error {
 		})
 	}
 	return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
-		Universities: model.Universities,
-		Count:        model.Count,
+		Universities: model,
+		Count:        count,
 	})
 }
 
-func (a *adminer) getUniversitiesList(request api.PostRequest) (*repositories.GetUniversitiesRepoResponse, error) {
+func (a *adminer) getUniversitiesList(request api.PostRequest) ([]models.University, uint64, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
 	if request.Page <= 0 {
 		request.Page = 1
 	}
-	universities, err := a.repo.GetUniversities(request.Filter, request.SortBy, request.Limit, request.Page)
+	universities, err := a.repo.GetUniversitiesList(request.Filter, request.SortBy, request.Limit, request.Page)
 	if err != nil {
-		return nil, errors.Wrap(err, "can not get from universities list")
+		return nil, 0, errors.Wrap(err, "can not get from universities list")
 	}
-	if universities == nil {
-		return nil, err
+
+	count, err := a.repo.GetUniversitiesCount(request.Filter)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "can not get universities count")
 	}
-	return universities, err
+	if universities == nil && count != 0 {
+		return nil, count, errors.Errorf("no such page")
+	}
+	return universities, count, err
 }

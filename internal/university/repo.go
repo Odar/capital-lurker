@@ -4,7 +4,6 @@ import (
 	"github.com/Masterminds/squirrel"
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
-	"github.com/Odar/capital-lurker/pkg/app/repositories"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -21,7 +20,7 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetUniversities(filter *api.Filter, sortBy string, limit, page int) (*repositories.GetUniversitiesRepoResponse, error) {
+func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, page int) ([]models.University, error) {
 	base := r.builder.Select("*").From("university")
 	filtered := applyFilter(base, filter)
 
@@ -46,25 +45,25 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string, limit, page in
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
-
-	getCount := applyFilter(r.builder.Select("count(*)").From("university"), filter)
-	sql, args, err = getCount.ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "can not build sql")
-	}
-	var count []uint64
-	err = r.postgres.Select(&count, sql, args...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
-	}
-
 	if len(content) > 0 {
-		return &repositories.GetUniversitiesRepoResponse{
-			Universities: content,
-			Count:        count[0],
-		}, nil
+		return content, nil
 	}
 	return nil, nil
+}
+
+func (r *repo) GetUniversitiesCount(filter *api.Filter) (uint64, error) {
+	base := r.builder.Select("count(*) as c").From("university")
+	filtered := applyFilter(base, filter)
+	sql, args, err := filtered.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "can not build sql")
+	}
+	var result uint64
+	err = r.postgres.Get(&result, sql, args...)
+	if err != nil {
+		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+	return result, nil
 }
 
 func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
