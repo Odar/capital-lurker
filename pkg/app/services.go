@@ -6,9 +6,12 @@ type Receiver interface {
 	Reverse(ctx echo.Context) error
 }
 
-//heze
 type UniversityAdminer interface {
-	PostAdmin(ctx echo.Context) error
-	PutAdmin(ctx echo.Context) error
+	GetUniversitiesList(ctx echo.Context) error
+	AddUniversity(ctx echo.Context) error
 	DeleteAdmin(ctx echo.Context) error
+}
+
+type Speaker interface {
+	GetSpeakersOnMain(ctx echo.Context) error
 }

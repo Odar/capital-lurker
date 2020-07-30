@@ -21,12 +21,73 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.University, error) {
+func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, page int) ([]models.University, error) {
 	base := r.builder.Select("*").From("university")
+	filtered := applyFilter(base, filter)
 
-	//adding filters
+	sorted := filtered
+	switch sortBy {
+	case "":
+		sorted = sorted.OrderBy("id DESC")
+	default:
+		sorted = sorted.OrderBy(sortBy)
+	}
+
+	paged := sorted
+	paged = paged.Limit(uint64(limit))
+	paged = paged.Offset(uint64((page - 1) * limit))
+
+	sql, args, err := paged.ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+	content := make([]models.University, 0)
+	err = r.postgres.Select(&content, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+	if len(content) > 0 {
+		return content, nil
+	}
+	return nil, nil
+}
+
+func (r *repo) CountUniversities(filter *api.Filter) (uint64, error) {
+	base := r.builder.Select("count(*) as c").From("university")
+	filtered := applyFilter(base, filter)
+	sql, args, err := filtered.ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "can not build sql")
+	}
+	var result uint64
+	err = r.postgres.Get(&result, sql, args...)
+	if err != nil {
+		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+	return result, nil
+}
+
+func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
+	res := models.University{}
+	sql, args, err := r.builder.Insert("university").
+		Columns("name, on_main_page, in_filter, added_at, updated_at, position, img").
+		Values(uni.Name, uni.OnMainPage, uni.InFilter, time.Now().UTC(), time.Now().UTC(), uni.Position, uni.Img).
+		Suffix("RETURNING *").
+		ToSql()
+
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+
+	err = r.postgres.Get(&res, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+	return &res, nil
+}
+
+func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
 	filtered := base
-
 	if filter != nil {
 		if filter.Id != 0 { //add fix to query: id starts from 1
 			filtered = filtered.Where("id = ?", filter.Id)
@@ -53,53 +114,7 @@ func (r *repo) GetUniversities(filter *api.Filter, sortBy string) ([]models.Univ
 			filtered = filtered.Where("img LIKE ?", "%"+filter.Img+"%")
 		}
 	}
-
-	sorted := filtered
-	switch sortBy {
-	case "":
-		sorted = sorted.OrderBy("id DESC")
-	default:
-		sorted = sorted.OrderBy(sortBy)
-	}
-
-	sql, args, err := sorted.ToSql()
-
-	if err != nil {
-		return nil, errors.Wrap(err, "can not build sql")
-	}
-
-	size := 0 // size of content
-	content := make([]models.University, size)
-	err = r.postgres.Select(&content, sql, args...)
-
-	if err != nil {
-		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
-	}
-
-	if len(content) > 0 {
-		return content, nil
-	}
-
-	return nil, nil
-}
-
-func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
-	res := models.University{}
-	sql, args, err := r.builder.Insert("university").
-		Columns("name, on_main_page, in_filter, added_at, updated_at, position, img").
-		Values(uni.Name, uni.OnMainPage, uni.InFilter, time.Now().UTC(), time.Now().UTC(), uni.Position, uni.Img).
-		Suffix("RETURNING *").
-		ToSql()
-
-	if err != nil {
-		return nil, errors.Wrap(err, "can not build sql")
-	}
-
-	err = r.postgres.Get(&res, sql, args...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
-	}
-	return &res, nil
+	return filtered
 }
 
 func (r *repo) DeleteUniversity(id uint64) (*string, error) {
