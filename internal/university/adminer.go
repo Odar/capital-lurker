@@ -69,14 +69,14 @@ func (a *adminer) getUniversitiesList(request api.PostRequest) ([]models.Univers
 	return universities, count, err
 }
 
-func (a *adminer) PutAdmin(ctx echo.Context) error {
+func (a *adminer) AddUniversity(ctx echo.Context) error {
 	var request api.PutRequest
 	err := ctx.Bind(&request)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	model, err := a.putAdmin(request)
+	model, err := a.addUniversity(request)
 
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get universities list with request %+v", request)
@@ -95,7 +95,7 @@ func (a *adminer) PutAdmin(ctx echo.Context) error {
 	})
 }
 
-func (a *adminer) putAdmin(request api.PutRequest) (*models.University, error) {
+func (a *adminer) addUniversity(request api.PutRequest) (*models.University, error) {
 	uni, err := a.repo.AddUniversity(request) //nil Filter case
 
 	if uni == nil {
