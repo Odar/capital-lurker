@@ -51,7 +51,7 @@ func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, pag
 	return nil, nil
 }
 
-func (r *repo) GetUniversitiesCount(filter *api.Filter) (uint64, error) {
+func (r *repo) CountUniversities(filter *api.Filter) (uint64, error) {
 	base := r.builder.Select("count(*) as c").From("university")
 	filtered := applyFilter(base, filter)
 	sql, args, err := filtered.ToSql()
