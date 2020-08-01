@@ -87,30 +87,23 @@ func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
 	return &res, nil
 }
 
-func (r *repo) DeleteUniversity(id uint64) (*string, error) {
+func (r *repo) DeleteUniversity(id uint64) (int64, error) {
 	sql, args, err := r.builder.Delete("university").
 		Where("id = ?", id).
 		ToSql()
-	ret := "error"
-
 	if err != nil {
-		return &ret, errors.Wrap(err, "can not build sql")
+		return 0, errors.Wrap(err, "can not build sql")
 	}
 
 	res, err := r.postgres.Exec(sql, args...)
 	if err != nil {
-		return &ret, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 	num, err := res.RowsAffected()
 	if err != nil {
-		return &ret, errors.Wrapf(err, "can not get num of deleted rows")
+		return 0, errors.Wrapf(err, "can not get num of deleted rows")
 	}
-	if num > 0 {
-		ret = "deleted"
-		return &ret, nil
-	}
-	ret = "nothing"
-	return &ret, nil
+	return num, err
 }
 
 func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {

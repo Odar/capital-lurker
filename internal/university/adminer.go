@@ -13,6 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const (
+	errorResponse   = "error"
+	nothingResponse = "nothing"
+	deletedResponse = "deleted"
+)
+
 func New(repo repositories.AdminerRepo) *adminer {
 	return &adminer{
 		repo: repo,
@@ -106,33 +112,37 @@ func (a *adminer) addUniversity(request api.PutRequest) (*models.University, err
 
 func (a *adminer) DeleteUniversity(ctx echo.Context) error {
 	idString := ctx.Param("id")
-	if idString != "" {
-		idInt, err := strconv.ParseUint(idString, 10, 64)
-		if err != nil {
-			return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
-		}
-
-		resp, err := a.deleteUniversity(idInt)
-		ctx.Response().WriteHeader(http.StatusOK)
-		if resp != nil {
-			if err != nil {
-				return json.NewEncoder(ctx.Response()).Encode(api.DeleteResponse{
-					Whdb:  *resp,
-					Error: err.Error(),
-				})
-			} else {
-				return json.NewEncoder(ctx.Response()).Encode(api.DeleteResponse{
-					Whdb:  *resp,
-					Error: "",
-				})
-			}
-		} else {
-			return ctx.String(http.StatusInternalServerError, "something gone wrong")
-		}
+	if idString == "" {
+		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
-	return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+
+	idInt, err := strconv.ParseUint(idString, 10, 64)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	resp, err := a.deleteUniversity(idInt)
+	ctx.Response().WriteHeader(http.StatusOK)
+	if err != nil {
+		return json.NewEncoder(ctx.Response()).Encode(api.DeleteResponse{
+			Whdb:  resp,
+			Error: err.Error(),
+		})
+	} else {
+		return json.NewEncoder(ctx.Response()).Encode(api.DeleteResponse{
+			Whdb:  resp,
+			Error: "",
+		})
+	}
 }
 
-func (a *adminer) deleteUniversity(id uint64) (*string, error) {
-	return a.repo.DeleteUniversity(id)
+func (a *adminer) deleteUniversity(id uint64) (string, error) {
+	rowsAffected, err := a.repo.DeleteUniversity(id)
+	if err != nil {
+		return errorResponse, err
+	}
+	if rowsAffected != 0 {
+		return deletedResponse, nil
+	}
+	return nothingResponse, nil
 }
