@@ -104,15 +104,15 @@ func (a *adminer) addUniversity(request api.PutRequest) (*models.University, err
 	return uni, nil
 }
 
-func (a *adminer) DeleteAdmin(ctx echo.Context) error {
-	id := ctx.ParamValues()
-	if len(id) > 0 && id[0] != "" {
-		idInt, err := strconv.ParseUint(id[0], 10, 64)
+func (a *adminer) DeleteUniversity(ctx echo.Context) error {
+	idString := ctx.Param("id")
+	if idString != "" {
+		idInt, err := strconv.ParseUint(idString, 10, 64)
 		if err != nil {
 			return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		}
 
-		resp, err := a.deleteAdmin(idInt)
+		resp, err := a.deleteUniversity(idInt)
 		ctx.Response().WriteHeader(http.StatusOK)
 		if resp != nil {
 			if err != nil {
@@ -133,6 +133,6 @@ func (a *adminer) DeleteAdmin(ctx echo.Context) error {
 	return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 }
 
-func (a *adminer) deleteAdmin(id uint64) (*string, error) {
+func (a *adminer) deleteUniversity(id uint64) (*string, error) {
 	return a.repo.DeleteUniversity(id)
 }

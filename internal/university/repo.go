@@ -1,12 +1,13 @@
 package university
 
 import (
+	"time"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"time"
 )
 
 func NewRepo(postgres *sqlx.DB) *repo {
