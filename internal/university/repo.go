@@ -73,7 +73,7 @@ func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
 	sql, args, err := r.builder.Insert("university").
 		Columns("name, on_main_page, in_filter, added_at, updated_at, position, img").
 		Values(uni.Name, uni.OnMainPage, uni.InFilter, time.Now().UTC(), time.Now().UTC(), uni.Position, uni.Img).
-		Suffix("RETURNING *").
+		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
 		ToSql()
 
 	if err != nil {
@@ -87,30 +87,23 @@ func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
 	return &res, nil
 }
 
-func (r *repo) DeleteUniversity(id uint64) (*string, error) {
+func (r *repo) DeleteUniversity(id uint64) (int64, error) {
 	sql, args, err := r.builder.Delete("university").
 		Where("id = ?", id).
 		ToSql()
-	ret := "error"
-
 	if err != nil {
-		return &ret, errors.Wrap(err, "can not build sql")
+		return 0, errors.Wrap(err, "can not build sql")
 	}
 
 	res, err := r.postgres.Exec(sql, args...)
 	if err != nil {
-		return &ret, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 	num, err := res.RowsAffected()
 	if err != nil {
-		return &ret, errors.Wrapf(err, "can not get num of deleted rows")
+		return 0, errors.Wrapf(err, "can not get num of deleted rows")
 	}
-	if num > 0 {
-		ret = "deleted"
-		return &ret, nil
-	}
-	ret = "nothing"
-	return &ret, nil
+	return num, err
 }
 
 func (r *repo) UpdateUniversity(request api.PostIdRequest, id uint64) (*models.University, error) {
@@ -121,7 +114,7 @@ func (r *repo) UpdateUniversity(request api.PostIdRequest, id uint64) (*models.U
 		Set("updated_at", time.Now().UTC()).
 		Set("position", request.Position).
 		Set("img", request.Img).
-		Suffix("RETURNING *").
+		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
 		Where("id = ?", id).
 		ToSql()
 
