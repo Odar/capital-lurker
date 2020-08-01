@@ -6,9 +6,9 @@ import (
 )
 
 type AdminerRepo interface {
-	GetUniversities(filter *api.Filter, sortBy string) ([]models.University, error)
+	GetUniversitiesList(filter *api.Filter, sortBy string, limit, page int) ([]models.University, error)
+	CountUniversities(filter *api.Filter) (uint64, error)
 	AddUniversity(request api.PutRequest) (*models.University, error)
 	DeleteUniversity(id uint64) (*string, error)
 	UpdateUniversity(request api.PostIdRequest, id uint64) (*models.University, error)
-	//other issues
 }

@@ -1,7 +1,10 @@
 package api
 
-import "time"
-import "github.com/Odar/capital-lurker/pkg/app/models"
+import (
+	"time"
+
+	"github.com/Odar/capital-lurker/pkg/app/models"
+)
 
 type DateRange struct {
 	From time.Time `json:"from"`

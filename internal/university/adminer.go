@@ -2,14 +2,15 @@ package university
 
 import (
 	"encoding/json"
+	"net/http"
+	"strconv"
+
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
-	"net/http"
-	"strconv"
 )
 
 func New(repo repositories.AdminerRepo) *adminer {
@@ -22,113 +23,96 @@ type adminer struct {
 	repo repositories.AdminerRepo
 }
 
-func (a *adminer) PostAdmin(ctx echo.Context) error {
+func (a *adminer) GetUniversitiesList(ctx echo.Context) error {
 	var request api.PostRequest
 	err := ctx.Bind(&request)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	model, err := a.postAdmin(request)
-
+	universities, count, err := a.getUniversitiesList(request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get universities list with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
-
-	if model == nil {
+	if universities == nil {
 		return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
 			Universities: []models.University{},
 			Count:        0,
 		})
 	}
-
 	return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
-		Universities: model,
-		Count:        uint64(len(model)),
+		Universities: universities,
+		Count:        count,
 	})
 }
 
-func (a *adminer) postAdmin(request api.PostRequest) ([]models.University, error) {
-	content, err := a.repo.GetUniversities(request.Filter, request.SortBy) //nil Filter case
-
-	if content == nil {
-		return nil, err
+func (a *adminer) getUniversitiesList(request api.PostRequest) ([]models.University, uint64, error) {
+	if request.Limit <= 0 {
+		request.Limit = 10
 	}
-
+	if request.Page <= 0 {
+		request.Page = 1
+	}
+	universities, err := a.repo.GetUniversitiesList(request.Filter, request.SortBy, request.Limit, request.Page)
 	if err != nil {
-		return nil, errors.Wrap(err, "can not get from universities list")
+		return nil, 0, errors.Wrap(err, "can not get from universities list")
 	}
 
-	limit, page := request.Limit, request.Page
-	if limit <= 0 {
-		limit = 10
+	count, err := a.repo.CountUniversities(request.Filter)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "can not get universities count")
 	}
-	if page <= 0 {
-		page = 1
+	if universities == nil && count != 0 {
+		return nil, count, errors.Errorf("no such page")
 	}
-	if page-1 > len(content)/limit {
-		return nil, errors.New("no such page")
-	}
-
-	model := make([]models.University, 0, limit)
-	for i := 0; i < limit && (page-1)*limit+i < len(content); i++ {
-		model = append(model, content[(page-1)*limit+i])
-	}
-
-	return model, err
+	return universities, count, err
 }
 
-func (a *adminer) PutAdmin(ctx echo.Context) error {
+func (a *adminer) AddUniversity(ctx echo.Context) error {
 	var request api.PutRequest
 	err := ctx.Bind(&request)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	model, err := a.putAdmin(request)
-
+	model, err := a.addUniversity(request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get universities list with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
-
 	if model == nil {
 		return json.NewEncoder(ctx.Response()).Encode(api.PutResponse{
 			University: models.University{},
 		})
 	}
-
 	return json.NewEncoder(ctx.Response()).Encode(api.PutResponse{
 		University: *model,
 	})
 }
 
-func (a *adminer) putAdmin(request api.PutRequest) (*models.University, error) {
-	uni, err := a.repo.AddUniversity(request) //nil Filter case
-
+func (a *adminer) addUniversity(request api.PutRequest) (*models.University, error) {
+	uni, err := a.repo.AddUniversity(request)
 	if uni == nil {
 		return nil, err
 	}
-
 	if err != nil {
 		return nil, errors.Wrap(err, "can not add university to list")
 	}
-
 	return uni, nil
 }
 
-func (a *adminer) DeleteAdmin(ctx echo.Context) error {
-	id := ctx.ParamValues()
-	if len(id) > 0 && id[0] != "" {
-		idInt, err := strconv.ParseUint(id[0], 10, 64)
+func (a *adminer) DeleteUniversity(ctx echo.Context) error {
+	idString := ctx.Param("id")
+	if idString != "" {
+		idInt, err := strconv.ParseUint(idString, 10, 64)
 		if err != nil {
 			return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		}
 
-		resp, err := a.deleteAdmin(idInt)
+		resp, err := a.deleteUniversity(idInt)
 		ctx.Response().WriteHeader(http.StatusOK)
 		if resp != nil {
 			if err != nil {
@@ -149,7 +133,7 @@ func (a *adminer) DeleteAdmin(ctx echo.Context) error {
 	return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 }
 
-func (a *adminer) deleteAdmin(id uint64) (*string, error) {
+func (a *adminer) deleteUniversity(id uint64) (*string, error) {
 	return a.repo.DeleteUniversity(id)
 }
 
