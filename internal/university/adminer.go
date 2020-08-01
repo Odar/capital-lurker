@@ -130,6 +130,7 @@ func (a *adminer) DeleteUniversity(ctx echo.Context) error {
 			return ctx.String(http.StatusInternalServerError, "something gone wrong")
 		}
 	}
+
 	return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 }
 
@@ -137,10 +138,10 @@ func (a *adminer) deleteUniversity(id uint64) (*string, error) {
 	return a.repo.DeleteUniversity(id)
 }
 
-func (a *adminer) PostIdAdmin(ctx echo.Context) error {
-	id := ctx.ParamValues()
-	if len(id) > 0 && id[0] != "" {
-		idInt, err := strconv.ParseUint(id[0], 10, 64)
+func (a *adminer) UpdateUniversity(ctx echo.Context) error {
+	idString := ctx.Param("id")
+	if idString != "" {
+		idInt, err := strconv.ParseUint(idString, 10, 64)
 		if err != nil {
 			return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		}
@@ -151,7 +152,7 @@ func (a *adminer) PostIdAdmin(ctx echo.Context) error {
 			return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 		}
 
-		resp, err := a.postIdAdmin(request, idInt)
+		resp, err := a.updateUniversity(request, idInt)
 
 		if err != nil {
 			log.Error().Err(err).Msgf("can not update university with request %+v and id = %d", request, idInt)
@@ -163,9 +164,10 @@ func (a *adminer) PostIdAdmin(ctx echo.Context) error {
 			University: *resp,
 		})
 	}
+
 	return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 }
 
-func (a *adminer) postIdAdmin(request api.PostIdRequest, id uint64) (*models.University, error) {
+func (a *adminer) updateUniversity(request api.PostIdRequest, id uint64) (*models.University, error) {
 	return a.repo.UpdateUniversity(request, id)
 }
