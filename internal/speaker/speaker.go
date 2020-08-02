@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/Odar/capital-lurker/pkg/app/models"
-
 	"github.com/Odar/capital-lurker/pkg/api"
+	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
 	echo "github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
