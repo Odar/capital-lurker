@@ -124,16 +124,16 @@ func (a *adminer) DeleteUniversity(ctx echo.Context) error {
 	resp, err := a.deleteUniversity(idInt)
 	ctx.Response().WriteHeader(http.StatusOK)
 	if err != nil {
-		return json.NewEncoder(ctx.Response()).Encode(api.DeleteResponse{
+		return json.NewEncoder(ctx.Response()).Encode(api.DeleteUniversityResponse{
 			Whdb:  resp,
 			Error: err.Error(),
 		})
-	} else {
-		return json.NewEncoder(ctx.Response()).Encode(api.DeleteResponse{
-			Whdb:  resp,
-			Error: "",
-		})
 	}
+
+	return json.NewEncoder(ctx.Response()).Encode(api.DeleteUniversityResponse{
+		Whdb:  resp,
+		Error: "",
+	})
 }
 
 func (a *adminer) deleteUniversity(id uint64) (string, error) {
