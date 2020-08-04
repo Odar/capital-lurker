@@ -46,7 +46,8 @@ func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 }
 
 func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.SpeakerForAdminFilter) (
-	[]models.Speaker, error) {
+	[]models.Speaker, error,
+) {
 	sortBy = validateSortByParameter(sortBy)
 	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("*").From("speaker"))
 	sql, args, err := speakersQuery.Limit(uint64(limit)).Offset(uint64((page - 1) * limit)).OrderBy(sortBy).ToSql()
