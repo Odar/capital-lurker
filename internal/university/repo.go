@@ -50,6 +50,7 @@ func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, pag
 	if len(content) > 0 {
 		return content, nil
 	}
+
 	return nil, nil
 }
 
@@ -65,6 +66,7 @@ func (r *repo) CountUniversities(filter *api.Filter) (uint64, error) {
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
+
 	return result, nil
 }
 
@@ -84,6 +86,7 @@ func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
+
 	return &res, nil
 }
 
@@ -103,6 +106,7 @@ func (r *repo) DeleteUniversity(id uint64) (int64, error) {
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not get num of deleted rows")
 	}
+
 	return num, err
 }
 

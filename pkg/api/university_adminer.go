@@ -46,7 +46,7 @@ type PutResponse struct {
 	University models.University `json:"university"`
 }
 
-type DeleteResponse struct {
+type DeleteUniversityResponse struct {
 	Whdb  string `json:"whdb"`
 	Error string `json:"error"`
 }
