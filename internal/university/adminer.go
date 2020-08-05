@@ -3,6 +3,7 @@ package university
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
@@ -10,6 +11,12 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+)
+
+const (
+	errorResponse   = "error"
+	nothingResponse = "nothing"
+	deletedResponse = "deleted"
 )
 
 func New(repo repositories.AdminerRepo) *adminer {
@@ -101,4 +108,41 @@ func (a *adminer) addUniversity(request api.PutRequest) (*models.University, err
 		return nil, errors.Wrap(err, "can not add university to list")
 	}
 	return uni, nil
+}
+
+func (a *adminer) DeleteUniversity(ctx echo.Context) error {
+	idString := ctx.Param("id")
+	if idString == "" {
+		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	idInt, err := strconv.ParseUint(idString, 10, 64)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	resp, err := a.deleteUniversity(idInt)
+	ctx.Response().WriteHeader(http.StatusOK)
+	if err != nil {
+		return json.NewEncoder(ctx.Response()).Encode(api.DeleteUniversityResponse{
+			Whdb:  resp,
+			Error: err.Error(),
+		})
+	}
+
+	return json.NewEncoder(ctx.Response()).Encode(api.DeleteUniversityResponse{
+		Whdb:  resp,
+		Error: "",
+	})
+}
+
+func (a *adminer) deleteUniversity(id uint64) (string, error) {
+	rowsAffected, err := a.repo.DeleteUniversity(id)
+	if err != nil {
+		return errorResponse, err
+	}
+	if rowsAffected != 0 {
+		return deletedResponse, nil
+	}
+	return nothingResponse, nil
 }

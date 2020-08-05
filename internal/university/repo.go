@@ -1,12 +1,13 @@
 package university
 
 import (
+	"time"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
-	"time"
 )
 
 func NewRepo(postgres *sqlx.DB) *repo {
@@ -49,6 +50,7 @@ func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, pag
 	if len(content) > 0 {
 		return content, nil
 	}
+
 	return nil, nil
 }
 
@@ -64,6 +66,7 @@ func (r *repo) CountUniversities(filter *api.Filter) (uint64, error) {
 	if err != nil {
 		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
+
 	return result, nil
 }
 
@@ -84,6 +87,26 @@ func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
 	}
 
 	return &res, nil
+}
+
+func (r *repo) DeleteUniversity(id uint64) (int64, error) {
+	sql, args, err := r.builder.Delete("university").
+		Where("id = ?", id).
+		ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "can not build sql")
+	}
+
+	res, err := r.postgres.Exec(sql, args...)
+	if err != nil {
+		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+	num, err := res.RowsAffected()
+	if err != nil {
+		return 0, errors.Wrapf(err, "can not get num of deleted rows")
+	}
+
+	return num, err
 }
 
 func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
