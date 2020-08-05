@@ -14,3 +14,7 @@ type UniversityAdminer interface {
 type Speaker interface {
 	GetSpeakersOnMain(ctx echo.Context) error
 }
+
+type Videodisc interface {
+	UploadVideo(ctx echo.Context) error
+}
