@@ -77,7 +77,6 @@ func (r *repo) AddUniversity(uni api.PutRequest) (*models.University, error) {
 		Values(uni.Name, uni.OnMainPage, uni.InFilter, time.Now().UTC(), time.Now().UTC(), uni.Position, uni.Img).
 		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
 		ToSql()
-
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
