@@ -129,6 +129,7 @@ func (r *repo) UpdateUniversity(request api.UpdateUniversityRequest, id uint64) 
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
+
 	return res, nil
 }
 
