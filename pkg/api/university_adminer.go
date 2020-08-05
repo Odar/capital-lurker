@@ -45,3 +45,8 @@ type PutRequest struct {
 type PutResponse struct {
 	University models.University `json:"university"`
 }
+
+type DeleteUniversityResponse struct {
+	Whdb  string `json:"whdb"`
+	Error string `json:"error"`
+}

@@ -9,6 +9,7 @@ type Receiver interface {
 type UniversityAdminer interface {
 	GetUniversitiesList(ctx echo.Context) error
 	AddUniversity(ctx echo.Context) error
+	DeleteUniversity(ctx echo.Context) error
 }
 
 type Speaker interface {
