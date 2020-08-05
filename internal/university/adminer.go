@@ -125,13 +125,13 @@ func (a *adminer) DeleteUniversity(ctx echo.Context) error {
 	ctx.Response().WriteHeader(http.StatusOK)
 	if err != nil {
 		return json.NewEncoder(ctx.Response()).Encode(api.DeleteUniversityResponse{
-			Whdb:  resp,
+			WHBD:  resp,
 			Error: err.Error(),
 		})
 	}
 
 	return json.NewEncoder(ctx.Response()).Encode(api.DeleteUniversityResponse{
-		Whdb:  resp,
+		WHBD:  resp,
 		Error: "",
 	})
 }
@@ -158,14 +158,13 @@ func (a *adminer) UpdateUniversity(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
-	var request api.PostIdRequest
+	var request api.UpdateUniversityRequest
 	err = ctx.Bind(&request)
 	if err != nil {
 		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
 	}
 
 	resp, err := a.updateUniversity(request, idInt)
-
 	if err != nil {
 		log.Error().Err(err).Msgf("can not update university with request %+v and id = %d", request, idInt)
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -177,6 +176,6 @@ func (a *adminer) UpdateUniversity(ctx echo.Context) error {
 	})
 }
 
-func (a *adminer) updateUniversity(request api.PostIdRequest, id uint64) (*models.University, error) {
+func (a *adminer) updateUniversity(request api.UpdateUniversityRequest, id uint64) (*models.University, error) {
 	return a.repo.UpdateUniversity(request, id)
 }

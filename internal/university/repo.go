@@ -110,7 +110,7 @@ func (r *repo) DeleteUniversity(id uint64) (int64, error) {
 	return num, err
 }
 
-func (r *repo) UpdateUniversity(request api.PostIdRequest, id uint64) (*models.University, error) {
+func (r *repo) UpdateUniversity(request api.UpdateUniversityRequest, id uint64) (*models.University, error) {
 	sql, args, err := r.builder.Update("university").
 		Set("name", request.Name).
 		Set("on_main_page", *request.OnMainPage).
@@ -121,7 +121,6 @@ func (r *repo) UpdateUniversity(request api.PostIdRequest, id uint64) (*models.U
 		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
 		Where("id = ?", id).
 		ToSql()
-
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}

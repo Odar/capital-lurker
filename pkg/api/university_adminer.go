@@ -47,11 +47,11 @@ type PutResponse struct {
 }
 
 type DeleteUniversityResponse struct {
-	Whdb  string `json:"whdb"`
+	WHBD  string `json:"whdb"`
 	Error string `json:"error"`
 }
 
-type PostIdRequest struct {
+type UpdateUniversityRequest struct {
 	Name       string `query:"name" json:"name"`
 	OnMainPage *bool  `query:"on_main_page" json:"on_main_page"`
 	InFilter   *bool  `query:"in_filter" json:"in_filter"`
@@ -59,6 +59,6 @@ type PostIdRequest struct {
 	Img        string `query:"img" json:"img"`
 }
 
-type PostIdResponse struct {
+type UpdateUniversityResponse struct {
 	University models.University `json:"university"`
 }
