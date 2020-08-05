@@ -47,7 +47,7 @@ type PutResponse struct {
 }
 
 type DeleteUniversityResponse struct {
-	WHBD  string `json:"whdb"`
+	WHBD  string `json:"whbd"`
 	Error string `json:"error"`
 }
 
