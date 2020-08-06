@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Odar/capital-lurker/pkg/api"
+	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
 	echo "github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
@@ -47,4 +48,46 @@ func (s *speaker) getSpeakersOnMain(request api.GetSpeakersOnMainRequest) ([]api
 	}
 
 	return speakers, nil
+}
+
+func (s *speaker) GetSpeakersForAdmin(ctx echo.Context) error {
+	var request api.GetSpeakersForAdminRequest
+	err := ctx.Bind(&request)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not retrieve data from JSON:%+v", request)
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+
+	speakersForAdmin, count, err := s.getSpeakerForAdmin(&request)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not get speaker for admin with request %+v", request)
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	ctx.Response().WriteHeader(http.StatusOK)
+	return json.NewEncoder(ctx.Response()).Encode(api.GetSpeakersForAdminResponse{
+		Speakers: speakersForAdmin,
+		Count:    count,
+	})
+}
+
+func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([]models.Speaker, uint64, error) {
+	if request.Limit <= 0 {
+		request.Limit = 10
+	}
+	if request.Page <= 0 {
+		request.Page = 1
+	}
+
+	speakers, err := s.repo.GetSpeakersForAdmin(request.Limit, request.Page, request.SortBy, &request.Filter)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "can not get speakers from db")
+	}
+
+	count, err := s.repo.CountSpeakersForAdmin(&request.Filter)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "can not count speakers from db")
+	}
+
+	return speakers, count, nil
 }

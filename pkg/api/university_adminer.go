@@ -12,7 +12,7 @@ type DateRange struct {
 }
 
 type Filter struct {
-	Id             uint64     `json:"id"`
+	ID             uint64     `json:"id"`
 	Name           string     `json:"name"`
 	OnMainPage     *bool      `json:"on_main_page"`
 	InFilter       *bool      `json:"in_filter"`

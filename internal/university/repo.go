@@ -112,8 +112,8 @@ func (r *repo) DeleteUniversity(id uint64) (int64, error) {
 func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
 	filtered := base
 	if filter != nil {
-		if filter.Id != 0 { //add fix to query: id starts from 1
-			filtered = filtered.Where("id = ?", filter.Id)
+		if filter.ID != 0 { //add fix to query: id starts from 1
+			filtered = filtered.Where("id = ?", filter.ID)
 		}
 		if filter.Name != "" {
 			filtered = filtered.Where("name LIKE ?", "%"+filter.Name+"%")
