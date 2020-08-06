@@ -121,10 +121,15 @@ func (s *speaker) DeleteSpeakerForAdmin(ctx echo.Context) error {
 }
 
 func (s *speaker) deleteSpeakerForAdmin(request *api.DeleteSpeakerForAdminRequest) (string, error) {
-	WHBD, err := s.repo.DeleteSpeakerForAdmin(request.ID)
+	count, err := s.repo.DeleteSpeaker(request.ID)
 	if err != nil {
-		return WHBD, errors.Wrap(err, "can not delete from db")
+		return "error", errors.Wrap(err, "can not delete from db")
 	}
-
-	return WHBD, nil
+	if count == 1 {
+		return "deleted", nil
+	}
+	if count == 0 {
+		return "nothing", nil
+	}
+	return "error", errors.New("something went wrong")
 }
