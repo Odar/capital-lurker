@@ -147,8 +147,8 @@ func (r *repo) UpdateUniversity(request api.UpdateUniversityRequest, id uint64) 
 func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
 	filtered := base
 	if filter != nil {
-		if filter.Id != nil { //add fix to query: id starts from 1
-			filtered = filtered.Where("id = ?", *filter.Id)
+		if filter.ID != nil { //add fix to query: id starts from 1
+			filtered = filtered.Where("id = ?", *filter.ID)
 		}
 		if filter.Name != nil {
 			filtered = filtered.Where("name LIKE ?", "%"+*filter.Name+"%")

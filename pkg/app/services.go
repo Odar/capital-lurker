@@ -1,6 +1,6 @@
 package app
 
-import "github.com/labstack/echo/v4"
+import echo "github.com/labstack/echo/v4"
 
 type Receiver interface {
 	Reverse(ctx echo.Context) error
@@ -15,4 +15,5 @@ type UniversityAdminer interface {
 
 type Speaker interface {
 	GetSpeakersOnMain(ctx echo.Context) error
+	GetSpeakersForAdmin(ctx echo.Context) error
 }
