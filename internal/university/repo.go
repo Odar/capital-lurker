@@ -122,7 +122,7 @@ func (r *repo) UpdateUniversity(request api.UpdateUniversityRequest, id uint64) 
 	}
 	updateRequest = updateRequest.Set("updated_at", time.Now().UTC())
 	if request.Position != nil {
-		updateRequest = updateRequest.Set("position", request.Position)
+		updateRequest = updateRequest.Set("position", *request.Position)
 	}
 	if request.Img != nil {
 		updateRequest = updateRequest.Set("img", *request.Img)
