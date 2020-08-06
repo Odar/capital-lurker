@@ -1,13 +1,19 @@
 package app
 
-import "github.com/labstack/echo/v4"
+import echo "github.com/labstack/echo/v4"
 
 type Receiver interface {
-    Reverse(ctx echo.Context) error
+	Reverse(ctx echo.Context) error
+}
+
+type UniversityAdminer interface {
+	GetUniversitiesList(ctx echo.Context) error
+	AddUniversity(ctx echo.Context) error
+	DeleteUniversity(ctx echo.Context) error
 }
 
 type Speaker interface {
-    GetSpeakerOnMain(ctx echo.Context) error
-    GetSpeakerForAdmin(ctx echo.Context) error
-    DeleteSpeakerForAdmin(ctx echo.Context) error
+	GetSpeakersOnMain(ctx echo.Context) error
+	GetSpeakersForAdmin(ctx echo.Context) error
+	DeleteSpeakerForAdmin(ctx echo.Context) error
 }
