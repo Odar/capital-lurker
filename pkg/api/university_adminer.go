@@ -12,14 +12,14 @@ type DateRange struct {
 }
 
 type Filter struct {
-	Id             uint64     `json:"id"`
-	Name           string     `json:"name"`
+	Id             *uint64    `json:"id"`
+	Name           *string    `json:"name"`
 	OnMainPage     *bool      `json:"on_main_page"`
 	InFilter       *bool      `json:"in_filter"`
 	AddedAtRange   *DateRange `json:"added_at_range"`
 	UpdatedAtRange *DateRange `json:"updated_at_range"`
-	Position       uint64     `json:"position"`
-	Img            string     `json:"img"`
+	Position       *uint64    `json:"position"`
+	Img            *string    `json:"img"`
 }
 
 type PostRequest struct {
@@ -52,11 +52,11 @@ type DeleteUniversityResponse struct {
 }
 
 type UpdateUniversityRequest struct {
-	Name       string `query:"name" json:"name"`
-	OnMainPage *bool  `query:"on_main_page" json:"on_main_page"`
-	InFilter   *bool  `query:"in_filter" json:"in_filter"`
-	Position   uint64 `query:"position" json:"position"`
-	Img        string `query:"img" json:"img"`
+	Name       *string `query:"name" json:"name"`
+	OnMainPage *bool   `query:"on_main_page" json:"on_main_page"`
+	InFilter   *bool   `query:"in_filter" json:"in_filter"`
+	Position   *uint64 `query:"position" json:"position"`
+	Img        *string `query:"img" json:"img"`
 }
 
 type UpdateUniversityResponse struct {

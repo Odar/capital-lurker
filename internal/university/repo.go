@@ -110,14 +110,25 @@ func (r *repo) DeleteUniversity(id uint64) (int64, error) {
 }
 
 func (r *repo) UpdateUniversity(request api.UpdateUniversityRequest, id uint64) (*models.University, error) {
-	sql, args, err := r.builder.Update("university").
-		Set("name", request.Name).
-		Set("on_main_page", *request.OnMainPage).
-		Set("in_filter", *request.InFilter).
-		Set("updated_at", time.Now().UTC()).
-		Set("position", request.Position).
-		Set("img", request.Img).
-		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
+	updateRequest := r.builder.Update("university")
+	if request.Name != nil {
+		updateRequest = updateRequest.Set("name", *request.Name)
+	}
+	if request.OnMainPage != nil {
+		updateRequest = updateRequest.Set("on_main_page", *request.OnMainPage)
+	}
+	if request.InFilter != nil {
+		updateRequest = updateRequest.Set("in_filter", *request.InFilter)
+	}
+	updateRequest = updateRequest.Set("updated_at", time.Now().UTC())
+	if request.Position != nil {
+		updateRequest = updateRequest.Set("position", request.Position)
+	}
+	if request.Img != nil {
+		updateRequest = updateRequest.Set("img", *request.Img)
+	}
+
+	sql, args, err := updateRequest.Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
 		Where("id = ?", id).
 		ToSql()
 	if err != nil {
@@ -136,11 +147,11 @@ func (r *repo) UpdateUniversity(request api.UpdateUniversityRequest, id uint64) 
 func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
 	filtered := base
 	if filter != nil {
-		if filter.Id != 0 { //add fix to query: id starts from 1
-			filtered = filtered.Where("id = ?", filter.Id)
+		if filter.Id != nil { //add fix to query: id starts from 1
+			filtered = filtered.Where("id = ?", *filter.Id)
 		}
-		if filter.Name != "" {
-			filtered = filtered.Where("name LIKE ?", "%"+filter.Name+"%")
+		if filter.Name != nil {
+			filtered = filtered.Where("name LIKE ?", "%"+*filter.Name+"%")
 		}
 		if filter.OnMainPage != nil { //how to parse blanks?
 			filtered = filtered.Where("on_main_page = ?", *filter.OnMainPage)
@@ -154,11 +165,11 @@ func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.Selec
 		if filter.UpdatedAtRange != nil {
 			filtered = filtered.Where("updated_at >= ? AND updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
 		}
-		if filter.Position != 0 {
-			filtered = filtered.Where("position = ?", filter.Position)
+		if filter.Position != nil {
+			filtered = filtered.Where("position = ?", *filter.Position)
 		}
-		if filter.Img != "" {
-			filtered = filtered.Where("img LIKE ?", "%"+filter.Img+"%")
+		if filter.Img != nil {
+			filtered = filtered.Where("img LIKE ?", "%"+*filter.Img+"%")
 		}
 	}
 	return filtered
