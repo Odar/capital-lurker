@@ -10,4 +10,5 @@ type AdminerRepo interface {
 	CountUniversities(filter *api.Filter) (uint64, error)
 	AddUniversity(request api.PutRequest) (*models.University, error)
 	DeleteUniversity(id uint64) (int64, error)
+	UpdateUniversity(request api.UpdateUniversityRequest, id uint64) (*models.University, error)
 }

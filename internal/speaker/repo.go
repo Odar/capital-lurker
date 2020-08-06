@@ -81,11 +81,11 @@ func (r *repo) CountSpeakersForAdmin(filter *api.Filter) (uint64, error) {
 }
 
 func validateFilterGetSpeakerForAdmin(filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
-	if filter.ID != 0 {
-		query = query.Where("id = ?", filter.ID)
+	if filter.ID != nil {
+		query = query.Where("id = ?", *filter.ID)
 	}
-	if filter.Name != "" {
-		query = query.Where("name LIKE ?", "%"+filter.Name+"%")
+	if filter.Name != nil {
+		query = query.Where("name LIKE ?", "%"+*filter.Name+"%")
 	}
 	if filter.OnMainPage != nil {
 		query = query.Where("on_main_page = ?", *filter.OnMainPage)
@@ -105,11 +105,11 @@ func validateFilterGetSpeakerForAdmin(filter *api.Filter, query squirrel.SelectB
 	if !filter.UpdatedAtRange.To.IsZero() {
 		query = query.Where("updated_at < ?", filter.UpdatedAtRange.To)
 	}
-	if filter.Position != 0 {
-		query = query.Where("position = ?", filter.Position)
+	if filter.Position != nil {
+		query = query.Where("position = ?", *filter.Position)
 	}
-	if filter.Img != "" {
-		query = query.Where("img LIKE ?", "%"+filter.Img+"%")
+	if filter.Img != nil {
+		query = query.Where("img LIKE ?", "%"+*filter.Img+"%")
 	}
 	return query
 }

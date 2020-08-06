@@ -7,4 +7,5 @@ func (s *server) setRoutes() {
 	s.echo.POST("/admin/university", s.universityAdminer.GetUniversitiesList)
 	s.echo.PUT("/admin/university", s.universityAdminer.AddUniversity)
 	s.echo.DELETE("/admin/university/:id", s.universityAdminer.DeleteUniversity)
+	s.echo.POST("/admin/university/:id", s.universityAdminer.UpdateUniversity)
 }
