@@ -45,7 +45,7 @@ func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 	return speakers, nil
 }
 
-func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.SpeakerForAdminFilter) (
+func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.Filter) (
 	[]models.Speaker, error,
 ) {
 	sortBy = validateSortByParameter(sortBy)
@@ -64,7 +64,7 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 	return speakers, nil
 }
 
-func (r *repo) CountSpeakersForAdmin(filter *api.SpeakerForAdminFilter) (uint64, error) {
+func (r *repo) CountSpeakersForAdmin(filter *api.Filter) (uint64, error) {
 	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("count(*)").From("speaker"))
 	sql, args, err := speakersQuery.ToSql()
 	if err != nil {
@@ -80,7 +80,7 @@ func (r *repo) CountSpeakersForAdmin(filter *api.SpeakerForAdminFilter) (uint64,
 	return count, nil
 }
 
-func validateFilterGetSpeakerForAdmin(filter *api.SpeakerForAdminFilter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
+func validateFilterGetSpeakerForAdmin(filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
 	if filter.ID != 0 {
 		query = query.Where("id = ?", filter.ID)
 	}

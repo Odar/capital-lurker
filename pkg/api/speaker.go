@@ -1,8 +1,6 @@
 package api
 
 import (
-	"time"
-
 	"github.com/Odar/capital-lurker/pkg/app/models"
 )
 
@@ -22,27 +20,11 @@ type GetSpeakersOnMainResponse struct {
 	Speakers []SpeakerOnMain `json:"speakers"`
 }
 
-type DateRange struct {
-	From time.Time `json:"from"`
-	To   time.Time `json:"to"`
-}
-
-type SpeakerForAdminFilter struct {
-	ID             uint64    `json:"id"`
-	Name           string    `json:"name"`
-	OnMainPage     *bool     `json:"on_main_page"`
-	InFilter       *bool     `json:"in_filter"`
-	AddedAtRange   DateRange `json:"added_at_range"`
-	UpdatedAtRange DateRange `json:"updated_at_range"`
-	Position       uint64    `json:"position"`
-	Img            string    `json:"img"`
-}
-
 type GetSpeakersForAdminRequest struct {
-	Limit  int64                 `json:"limit"`
-	Page   int64                 `json:"page"`
-	SortBy string                `json:"sortBy"`
-	Filter SpeakerForAdminFilter `json:"filter"`
+	Limit  int64  `json:"limit"`
+	Page   int64  `json:"page"`
+	SortBy string `json:"sortBy"`
+	Filter Filter `json:"filter"`
 }
 
 type GetSpeakersForAdminResponse struct {
