@@ -1,14 +1,16 @@
 package repositories
 
 import (
-    "github.com/Odar/capital-lurker/pkg/api"
-    "github.com/Odar/capital-lurker/pkg/app/models"
+	"github.com/Odar/capital-lurker/pkg/api"
+	"github.com/Odar/capital-lurker/pkg/app/models"
 )
 
 type SpeakerRepo interface {
-    GetSpeakerOnMainFromDB(limit int64) ([]api.SpeakerOnMain, error)
-    GetSpeakerForAdminFromDB(decodedParams *api.GetSpeakerForAdminRequest) ([]models.Speaker, uint64, error)
-    DeleteSpeakerForAdminFromDB(ID uint64) (string, error)
-    UpdateSpeakerForAdminInDB(ID uint64, request *api.UpdateSpeakerForAdminRequest) (*models.Speaker, error)
-    AddSpeakerForAdminInDB(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error)
+	GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error)
+	GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.Filter) ([]models.Speaker,
+		error)
+	CountSpeakersForAdmin(filter *api.Filter) (uint64, error)
+	DeleteSpeaker(ID uint64) (int64, error)
+	UpdateSpeakerForAdmin(ID uint64, request *api.UpdateSpeakerForAdminRequest) (*models.Speaker, error)
+	AddSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error)
 }
