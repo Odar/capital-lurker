@@ -80,6 +80,28 @@ func (r *repo) CountSpeakersForAdmin(filter *api.Filter) (uint64, error) {
 	return count, nil
 }
 
+func (r *repo) DeleteSpeaker(ID uint64) (int64, error) {
+	sql, args, err := r.builder.Delete("*").
+		From("speaker").
+		Where("id = ?", ID).
+		ToSql()
+	if err != nil {
+		return -1, errors.Wrap(err, "can not build sql")
+	}
+
+	result, err := r.postgres.Exec(sql, args...)
+	if err != nil {
+		return -1, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return -1, errors.Wrapf(err, "can not estimate deleted rows")
+	}
+
+	return count, nil
+}
+
 func validateFilterGetSpeakerForAdmin(filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
 	if filter.ID != nil {
 		query = query.Where("id = ?", *filter.ID)

@@ -31,3 +31,13 @@ type GetSpeakersForAdminResponse struct {
 	Speakers []models.Speaker `json:"speakers"`
 	Count    uint64           `json:"count"`
 }
+
+// API for deleting speakers for administration
+type DeleteSpeakerForAdminRequest struct {
+	ID uint64
+}
+
+type DeleteSpeakerForAdminResponse struct {
+	WHBD  string `json:"whbd"`
+	Error string `json:"error"`
+}

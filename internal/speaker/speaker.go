@@ -3,6 +3,7 @@ package speaker
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
@@ -90,4 +91,45 @@ func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([
 	}
 
 	return speakers, count, nil
+}
+
+func (s *speaker) DeleteSpeakerForAdmin(ctx echo.Context) error {
+	var request api.DeleteSpeakerForAdminRequest
+	var err error
+	request.ID, err = strconv.ParseUint(ctx.Param("id"), 10, 64)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not retrieve id:%+v", ctx.Param("id"))
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+
+	var WHBD string
+	WHBD, err = s.deleteSpeakerForAdmin(&request)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not delete speaker for admin with request %+v", request) // Maybe some problemsх
+		ctx.Response().WriteHeader(http.StatusInternalServerError)
+		return json.NewEncoder(ctx.Response()).Encode(api.DeleteSpeakerForAdminResponse{
+			WHBD:  "error",
+			Error: err.Error(),
+		})
+	}
+
+	ctx.Response().WriteHeader(http.StatusOK)
+	return json.NewEncoder(ctx.Response()).Encode(api.DeleteSpeakerForAdminResponse{
+		WHBD:  WHBD,
+		Error: "",
+	})
+}
+
+func (s *speaker) deleteSpeakerForAdmin(request *api.DeleteSpeakerForAdminRequest) (string, error) {
+	count, err := s.repo.DeleteSpeaker(request.ID)
+	if err != nil {
+		return "error", errors.Wrap(err, "can not delete from db")
+	}
+	if count == 1 {
+		return "deleted", nil
+	}
+	if count == 0 {
+		return "nothing", nil
+	}
+	return "error", errors.New("something went wrong")
 }
