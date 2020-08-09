@@ -17,16 +17,13 @@
         .wrapper {
             margin: 0 auto;
             max-width: 1400px;
-        }
-
-        form {
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
         }
 
-        input[type="submit"] {
+        button {
             outline: none;
             border: 2px solid #fff;
             font-size: .875rem;
@@ -41,20 +38,18 @@
             transition: all 0.2s ease;
         }
 
-        input[type="submit"]:hover {
+        button:hover {
             cursor: pointer;
         }
 
-        input[type="submit"]:active {
+        button:active {
             transform: scale3d(1.1, 1.1, 1.1);
         }
     </style>
 </head>
 <body>
 <div class="wrapper">
-    <form class="" action="https://oauth.vk.com/auth" method="post">
-        <input type="submit" value="Click!">
-    </form>
+    <a href="/auth"><button type="button" name="button">test</button></a>
 </div>
 </body>
 </html>
