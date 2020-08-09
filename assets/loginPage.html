@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Кнопочка</title>
+    <style media="screen">
+        html {
+            background: #232323;
+        }
+
+        body {
+            min-height: 100vh;
+        }
+
+        .wrapper {
+            margin: 0 auto;
+            max-width: 1400px;
+        }
+
+        form {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        input[type="submit"] {
+            outline: none;
+            border: 2px solid #fff;
+            font-size: .875rem;
+            font-weight: bold;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            background-color: transparent;
+            color: #fff;
+            padding: 20px 100px;
+
+            transform: scale3d(1, 1, 1);
+            transition: all 0.2s ease;
+        }
+
+        input[type="submit"]:hover {
+            cursor: pointer;
+        }
+
+        input[type="submit"]:active {
+            transform: scale3d(1.1, 1.1, 1.1);
+        }
+    </style>
+</head>
+<body>
+<div class="wrapper">
+    <form class="" action="https://oauth.vk.com/auth" method="post">
+        <input type="submit" value="Click!">
+    </form>
+</div>
+</body>
+</html>

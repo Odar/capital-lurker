@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Odar/capital-lurker/internal/authentification"
 	"github.com/Odar/capital-lurker/internal/config"
 	"github.com/Odar/capital-lurker/internal/db"
 	"github.com/Odar/capital-lurker/internal/receiver"
@@ -30,7 +31,9 @@ func main() {
 	speakerRepo := speaker.NewRepo(capitalDB)
 	speakerService := speaker.New(speakerRepo)
 
-	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerServise)
+	authServise := authentification.New()
+
+	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerServise, authServise)
 	err = srv.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not initialize server")
