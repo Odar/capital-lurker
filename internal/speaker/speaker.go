@@ -48,7 +48,24 @@ func (s *speaker) getSpeakersOnMain(request api.GetSpeakersOnMainRequest) ([]api
 		return nil, errors.Wrap(err, "can not get from db")
 	}
 
-	return speakers, nil
+	if len(speakers) == 0 {
+		return nil, nil
+	}
+
+	castedSpeakers := make([]api.SpeakerOnMain, len(speakers), len(speakers))
+	for i := 0; i < len(speakers); i++ {
+		castedSpeakers[i].ID = speakers[i].ID
+		castedSpeakers[i].Name = speakers[i].Name
+		castedSpeakers[i].Position = speakers[i].Position
+		castedSpeakers[i].Img = speakers[i].Img
+		if speakers[i].University != nil {
+			castedSpeakers[i].University.ID = speakers[i].University.ID
+			castedSpeakers[i].University.Name = speakers[i].University.Name
+			castedSpeakers[i].University.Img = speakers[i].University.Img
+		}
+	}
+
+	return castedSpeakers, nil
 }
 
 func (s *speaker) GetSpeakersForAdmin(ctx echo.Context) error {
@@ -90,6 +107,16 @@ func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([
 		return nil, 0, errors.Wrap(err, "can not count speakers from db")
 	}
 
+	if len(speakers) == 0 {
+		return nil, 0, nil
+	}
+
+	/*for i := 0; i < len(speakers); i++ {
+		if speakers[i].University != nil {
+
+		}
+	}*/
+
 	return speakers, count, nil
 }
 
@@ -105,7 +132,7 @@ func (s *speaker) DeleteSpeakerForAdmin(ctx echo.Context) error {
 	var WHBD string
 	WHBD, err = s.deleteSpeakerForAdmin(&request)
 	if err != nil {
-		log.Error().Err(err).Msgf("can not delete speaker for admin with request %+v", request)
+		log.Error().Err(err).Msgf("can not delete speaker for admin with request %+v", request) // Maybe some problemsх
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
 		return json.NewEncoder(ctx.Response()).Encode(api.DeleteSpeakerForAdminResponse{
 			WHBD:  "error",
@@ -121,12 +148,17 @@ func (s *speaker) DeleteSpeakerForAdmin(ctx echo.Context) error {
 }
 
 func (s *speaker) deleteSpeakerForAdmin(request *api.DeleteSpeakerForAdminRequest) (string, error) {
-	WHBD, err := s.repo.DeleteSpeakerForAdminFromDB(request.ID)
+	count, err := s.repo.DeleteSpeaker(request.ID)
 	if err != nil {
-		return WHBD, errors.Wrap(err, "can not delete from db")
+		return "error", errors.Wrap(err, "can not delete from db")
 	}
-
-	return WHBD, nil
+	if count == 1 {
+		return "deleted", nil
+	}
+	if count == 0 {
+		return "nothing", nil
+	}
+	return "error", errors.New("something went wrong")
 }
 
 func (s *speaker) UpdateSpeakerForAdmin(ctx echo.Context) error {
@@ -142,24 +174,24 @@ func (s *speaker) UpdateSpeakerForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	updateSpeaker, err := s.updateSpeakerForAdmin(requestID, &request)
+	updatedSpeaker, err := s.updateSpeakerForAdmin(requestID, &request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not update speaker for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
 	}
 
 	ctx.Response().WriteHeader(http.StatusOK)
-	return json.NewEncoder(ctx.Response()).Encode(updateSpeaker)
+	return json.NewEncoder(ctx.Response()).Encode(updatedSpeaker)
 }
 
 func (s *speaker) updateSpeakerForAdmin(requestID uint64, request *api.UpdateSpeakerForAdminRequest) (
 	*models.Speaker, error) {
-	updateSpeaker, err := s.repo.UpdateSpeakerForAdminInDB(requestID, request)
+	updatedSpeaker, err := s.repo.UpdateSpeakerForAdmin(requestID, request)
 	if err != nil {
-		return updateSpeaker, errors.Wrap(err, "can not update in db")
+		return updatedSpeaker, errors.Wrap(err, "can not update in db")
 	}
 
-	return updateSpeaker, nil
+	return updatedSpeaker, nil
 }
 
 func (s *speaker) AddSpeakerForAdmin(ctx echo.Context) error {
@@ -181,7 +213,7 @@ func (s *speaker) AddSpeakerForAdmin(ctx echo.Context) error {
 }
 
 func (s *speaker) addSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error) {
-	addedSpeaker, err := s.repo.AddSpeakerForAdminInDB(request)
+	addedSpeaker, err := s.repo.AddSpeakerForAdmin(request)
 	if err != nil {
 		return addedSpeaker, errors.Wrap(err, "can not update in db")
 	}

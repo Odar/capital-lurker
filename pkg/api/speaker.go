@@ -15,6 +15,14 @@ type UniversityOnMain struct {
 	Img  string `json:"img"`
 }
 
+type SpeakerOnMainResponse struct {
+	ID         uint64            `json:"id"`
+	Name       string            `json:"name"`
+	Position   uint64            `json:"position"`
+	Img        string            `json:"img"`
+	University *UniversityOnMain `json:"university"`
+}
+
 type SpeakerOnMain struct {
 	ID         uint64           `json:"id"`
 	Name       string           `json:"name"`
@@ -33,22 +41,11 @@ type DateRangeForFilter struct {
 	To   time.Time `json:"to"`
 }
 
-type SpeakerForAdminFilter struct {
-	ID             uint64             `json:"id"`
-	Name           string             `json:"name"`
-	OnMainPage     *bool              `json:"on_main_page"`
-	InFilter       *bool              `json:"in_filter"`
-	AddedAtRange   DateRangeForFilter `json:"added_at_range"`
-	UpdatedAtRange DateRangeForFilter `json:"updated_at_range"`
-	Position       uint64             `json:"position"`
-	Img            string             `json:"img"`
-}
-
 type GetSpeakersForAdminRequest struct {
-	Limit  int64                 `json:"limit"`
-	Page   int64                 `json:"page"`
-	SortBy string                `json:"sortBy"`
-	Filter SpeakerForAdminFilter `json:"filter"`
+	Limit  int64  `json:"limit"`
+	Page   int64  `json:"page"`
+	SortBy string `json:"sortBy"`
+	Filter Filter `json:"filter"`
 }
 
 type UniversityForAdmin struct {
@@ -63,15 +60,15 @@ type UniversityForAdmin struct {
 }
 
 type SpeakerForAdmin struct {
-	ID         uint64             `json:"id" db:"id"`
-	Name       string             `json:"name" db:"name"`
-	OnMainPage bool               `json:"on_main_page" db:"on_main_page"`
-	InFilter   bool               `json:"in_filter" db:"in_filter"`
-	AddedAt    time.Time          `json:"added_at" db:"added_at"`
-	UpdatedAt  time.Time          `json:"updated_at" db:"updated_at"`
-	Position   uint64             `json:"position" db:"position"`
-	Img        string             `json:"img" db:"img"`
-	University UniversityForAdmin `json:"university"`
+	ID         uint64              `json:"id" db:"id"`
+	Name       string              `json:"name" db:"name"`
+	OnMainPage bool                `json:"on_main_page" db:"on_main_page"`
+	InFilter   bool                `json:"in_filter" db:"in_filter"`
+	AddedAt    time.Time           `json:"added_at" db:"added_at"`
+	UpdatedAt  time.Time           `json:"updated_at" db:"updated_at"`
+	Position   uint64              `json:"position" db:"position"`
+	Img        string              `json:"img" db:"img"`
+	University *UniversityForAdmin `json:"university"`
 }
 
 type GetSpeakersForAdminResponse struct {
@@ -91,11 +88,11 @@ type DeleteSpeakerForAdminResponse struct {
 
 // API for updating speaker for administration
 type UpdateSpeakerForAdminRequest struct {
-	Name       string `json:"name"`
-	OnMainPage bool   `json:"on_main_page"`
-	InFilter   bool   `json:"in_filter"`
-	Position   uint64 `json:"position"`
-	Img        string `json:"img"`
+	Name       *string `json:"name"`
+	OnMainPage *bool   `json:"on_main_page"`
+	InFilter   *bool   `json:"in_filter"`
+	Position   *uint64 `json:"position"`
+	Img        *string `json:"img"`
 }
 
 type UpdateSpeakerForAdminResponse struct {

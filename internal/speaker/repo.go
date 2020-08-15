@@ -23,7 +23,7 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
+func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMainResponse, error) {
 	if limit <= 0 {
 		return nil, errors.New("bad request; parameter: limit should be positive")
 	}
@@ -40,7 +40,7 @@ func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	speakers := make([]api.SpeakerOnMain, 0, limit)
+	speakers := make([]api.SpeakerOnMainResponse, 0, limit)
 	err = r.postgres.Select(&speakers, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
@@ -49,10 +49,10 @@ func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 	return speakers, nil
 }
 
-func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.SpeakerForAdminFilter) (
+func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.Filter) (
 	[]api.SpeakerForAdmin, error) {
 	sortBy = validateSortByParameter(sortBy)
-	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select(
+	speakersQuery := validateFilter("speaker", filter, r.builder.Select(
 		"speaker.id, "+
 			"speaker.name, "+
 			"speaker.on_main_page, "+
@@ -60,7 +60,8 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 			"speaker.added_at, "+
 			"speaker.updated_at, "+
 			"speaker.position, "+
-			"speaker.img").From("speaker")).
+			"speaker.img").
+		From("speaker")).
 		Limit(uint64(limit)).Offset(uint64((page - 1) * limit)).OrderBy("speaker." + sortBy)
 	sql, args, err := speakersQuery.LeftJoin("university ON speaker.university_id = university.id").
 		ToSql()
@@ -77,8 +78,9 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 	return speakers, nil
 }
 
-func (r *repo) CountSpeakersForAdmin(filter *api.SpeakerForAdminFilter) (uint64, error) {
-	speakersQuery := validateFilterGetSpeakerForAdmin(filter, r.builder.Select("count(*)").From("speaker"))
+func (r *repo) CountSpeakersForAdmin(filter *api.Filter) (uint64, error) {
+	speakersQuery := validateFilter("speaker",
+		filter, r.builder.Select("count(*)").From("speaker"))
 	sql, args, err := speakersQuery.ToSql()
 	if err != nil {
 		return 0, errors.Wrap(err, "can not build sql")
@@ -93,36 +95,121 @@ func (r *repo) CountSpeakersForAdmin(filter *api.SpeakerForAdminFilter) (uint64,
 	return count, nil
 }
 
-func validateFilterGetSpeakerForAdmin(filter *api.SpeakerForAdminFilter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
-	if filter.ID != 0 {
-		query = query.Where("speaker.id = ?", filter.ID)
+func (r *repo) DeleteSpeaker(ID uint64) (int64, error) {
+	sql, args, err := r.builder.Delete("*").
+		From("speaker").
+		Where("id = ?", ID).
+		ToSql()
+	if err != nil {
+		return -1, errors.Wrap(err, "can not build sql")
 	}
-	if filter.Name != "" {
-		query = query.Where("speaker.name LIKE ?", "%"+filter.Name+"%")
+
+	result, err := r.postgres.Exec(sql, args...)
+	if err != nil {
+		return -1, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
-	if filter.OnMainPage != nil {
-		query = query.Where("speaker.on_main_page = ?", *filter.OnMainPage)
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return -1, errors.Wrapf(err, "can not estimate deleted rows")
 	}
-	if filter.InFilter != nil {
-		query = query.Where("speaker.in_filter = ?", *filter.InFilter)
+
+	return count, nil
+}
+
+func (r *repo) UpdateSpeakerForAdmin(ID uint64, request *api.UpdateSpeakerForAdminRequest) (
+	*models.Speaker, error) {
+	updateRequest := r.builder.Update("speaker")
+	if request.Name != nil {
+		updateRequest = updateRequest.Set("name", *request.Name)
 	}
-	if !filter.AddedAtRange.From.IsZero() {
-		query = query.Where("speaker.added_at >= ?", filter.AddedAtRange.From)
+	if request.OnMainPage != nil {
+		updateRequest = updateRequest.Set("on_main_page", *request.OnMainPage)
 	}
-	if !filter.AddedAtRange.To.IsZero() {
-		query = query.Where("speaker.added_at < ?", filter.AddedAtRange.To)
+	if request.InFilter != nil {
+		updateRequest = updateRequest.Set("in_filter", *request.InFilter)
 	}
-	if !filter.UpdatedAtRange.From.IsZero() {
-		query = query.Where("speaker.updated_at >= ?", filter.UpdatedAtRange.From)
+	updateRequest = updateRequest.Set("updated_at", time.Now().UTC())
+	if request.Position != nil {
+		updateRequest = updateRequest.Set("position", *request.Position)
 	}
-	if !filter.UpdatedAtRange.To.IsZero() {
-		query = query.Where("speaker.updated_at < ?", filter.UpdatedAtRange.To)
+	if request.Img != nil {
+		updateRequest = updateRequest.Set("img", *request.Img)
 	}
-	if filter.Position != 0 {
-		query = query.Where("speaker.position = ?", filter.Position)
+
+	sql, args, err := updateRequest.Suffix(
+		"RETURNING "+
+			"id, "+
+			"name, "+
+			"on_main_page, "+
+			"in_filter, "+
+			"added_at, "+
+			"updated_at, "+
+			"position, "+
+			"img").
+		Where("id = ?", ID).
+		ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
 	}
-	if filter.Img != "" {
-		query = query.Where("speaker.img LIKE ?", "%"+filter.Img+"%")
+
+	res := &models.Speaker{}
+	err = r.postgres.Get(res, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	return res, nil
+}
+
+func (r *repo) AddSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error) {
+	sql, args, err := r.builder.Insert("speaker").
+		Columns("name", "on_main_page", "in_filter", "added_at", "updated_at", "position", "img").
+		Values(request.Name, request.OnMainPage, request.InFilter, time.Now().UTC(), time.Now().UTC(),
+			request.Position, request.Img).
+		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
+		ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+
+	addedSpeaker := &models.Speaker{}
+	err = r.postgres.Get(addedSpeaker, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	return addedSpeaker, nil
+}
+
+func validateFilter(table_name string, filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
+	if filter != nil {
+		if filter.ID != nil { //add fix to query: id starts from 1
+			query = query.Where(table_name+".id = ?", *filter.ID)
+		}
+		if filter.Name != nil {
+			query = query.Where(table_name+".name LIKE ?", "%"+*filter.Name+"%")
+		}
+		if filter.OnMainPage != nil { //how to parse blanks?
+			query = query.Where(table_name+".on_main_page = ?", *filter.OnMainPage)
+		}
+		if filter.InFilter != nil {
+			query = query.Where(table_name+".in_filter = ?", *filter.InFilter)
+		}
+		if filter.AddedAtRange != nil {
+			query = query.Where(table_name+".added_at >= ? AND "+
+				table_name+".added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
+		}
+		if filter.UpdatedAtRange != nil {
+			query = query.Where(table_name+".updated_at >= ? AND "+
+				table_name+".updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
+		}
+		if filter.Position != nil {
+			query = query.Where(table_name+".position = ?", *filter.Position)
+		}
+		if filter.Img != nil {
+			query = query.Where(table_name+".img LIKE ?", "%"+*filter.Img+"%")
+		}
 	}
 	return query
 }
@@ -154,77 +241,6 @@ func validateSortByParameter(sortBy string) string {
 			sortBy = "id DESC"
 		}
 	}
+
 	return sortBy
-}
-func (r *repo) DeleteSpeakerForAdminFromDB(ID uint64) (string, error) {
-	sql, args, err := r.builder.Delete("*").
-		From("speaker").
-		Where("id = ?", ID).
-		ToSql()
-	if err != nil {
-		return "error", errors.Wrap(err, "can not build sql")
-	}
-
-	result, err := r.postgres.Exec(sql, args...)
-	if err != nil {
-		return "error", errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
-	}
-
-	count, err := result.RowsAffected()
-	if err != nil {
-		return "error", errors.Wrapf(err, "can not estimate deleted rows")
-	}
-	if count == 1 {
-		return "deleted", nil
-	}
-	if count == 0 {
-		return "nothing", nil
-	}
-
-	return "error", errors.Wrapf(err, "more than one rows were deleted")
-}
-
-func (r *repo) UpdateSpeakerForAdminInDB(ID uint64, request *api.UpdateSpeakerForAdminRequest) (
-	*models.Speaker, error) {
-	sql, args, err := r.builder.Update("speaker").
-		Set("name", request.Name).
-		Set("on_main_page", request.OnMainPage).
-		Set("in_filter", request.InFilter).
-		Set("updated_at", time.Now().UTC()).
-		Set("position", request.Position).
-		Set("img", request.Img).
-		Suffix("RETURNING *").
-		Where("id = ?", ID).
-		ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "can not build sql")
-	}
-
-	updateSpeaker := &models.Speaker{}
-	err = r.postgres.Get(updateSpeaker, sql, args...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
-	}
-
-	return updateSpeaker, nil
-}
-
-func (r *repo) AddSpeakerForAdminInDB(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error) {
-	sql, args, err := r.builder.Insert("speaker").
-		Columns("name", "on_main_page", "in_filter", "added_at", "updated_at", "position", "img").
-		Values(request.Name, request.OnMainPage, request.InFilter, time.Now().UTC(), time.Now().UTC(),
-			request.Position, request.Img).
-		Suffix("RETURNING *").
-		ToSql()
-	if err != nil {
-		return nil, errors.Wrap(err, "can not build sql")
-	}
-
-	addedSpeaker := &models.Speaker{}
-	err = r.postgres.Get(addedSpeaker, sql, args...)
-	if err != nil {
-		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
-	}
-
-	return addedSpeaker, nil
 }
