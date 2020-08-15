@@ -11,5 +11,5 @@ type SpeakerRepo interface {
 		error)
 	CountSpeakersForAdmin(filter *api.Filter) (uint64, error)
 	DeleteSpeaker(ID uint64) (int64, error)
-	UpdateSpeakerForAdmin(ID uint64, request *api.UpdateSpeakerForAdminRequest) (*models.Speaker, error)
+	UpdateSpeakerForAdmin(ID uint64, request api.UpdateSpeakerForAdminRequest) (*models.Speaker, error)
 }
