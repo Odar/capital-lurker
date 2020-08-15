@@ -46,11 +46,11 @@ type DeleteSpeakerForAdminResponse struct {
 
 // API for updating speaker for administration
 type UpdateSpeakerForAdminRequest struct {
-	Name       string `json:"name"`
-	OnMainPage bool   `json:"on_main_page"`
-	InFilter   bool   `json:"in_filter"`
-	Position   uint64 `json:"position"`
-	Img        string `json:"img"`
+	Name       *string `json:"name"`
+	OnMainPage *bool   `json:"on_main_page"`
+	InFilter   *bool   `json:"in_filter"`
+	Position   *uint64 `json:"position"`
+	Img        *string `json:"img"`
 }
 
 type UpdateSpeakerForAdminResponse struct {

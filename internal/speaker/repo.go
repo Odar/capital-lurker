@@ -137,29 +137,49 @@ func validateFilterGetSpeakerForAdmin(filter *api.Filter, query squirrel.SelectB
 	return query
 }
 
-func (r *repo) UpdateSpeakerForAdmin(ID uint64, request *api.UpdateSpeakerForAdminRequest) (
+func (r *repo) UpdateSpeakerForAdmin(ID uint64, request api.UpdateSpeakerForAdminRequest) (
 	*models.Speaker, error) {
-	sql, args, err := r.builder.Update("speaker").
-		Set("name", request.Name).
-		Set("on_main_page", request.OnMainPage).
-		Set("in_filter", request.InFilter).
-		Set("updated_at", time.Now().UTC()).
-		Set("position", request.Position).
-		Set("img", request.Img).
-		Suffix("RETURNING *").
+	updateRequest := r.builder.Update("speaker")
+	if request.Name != nil {
+		updateRequest = updateRequest.Set("name", *request.Name)
+	}
+	if request.OnMainPage != nil {
+		updateRequest = updateRequest.Set("on_main_page", *request.OnMainPage)
+	}
+	if request.InFilter != nil {
+		updateRequest = updateRequest.Set("in_filter", *request.InFilter)
+	}
+	updateRequest = updateRequest.Set("updated_at", time.Now().UTC())
+	if request.Position != nil {
+		updateRequest = updateRequest.Set("position", *request.Position)
+	}
+	if request.Img != nil {
+		updateRequest = updateRequest.Set("img", *request.Img)
+	}
+
+	sql, args, err := updateRequest.Suffix(
+		"RETURNING "+
+			"id, "+
+			"name, "+
+			"on_main_page, "+
+			"in_filter, "+
+			"added_at, "+
+			"updated_at, "+
+			"position, "+
+			"img").
 		Where("id = ?", ID).
 		ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	updateSpeaker := &models.Speaker{}
-	err = r.postgres.Get(updateSpeaker, sql, args...)
+	res := &models.Speaker{}
+	err = r.postgres.Get(res, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	return updateSpeaker, nil
+	return res, nil
 }
 
 func validateSortByParameter(sortBy string) string {
@@ -198,7 +218,7 @@ func (r *repo) AddSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*mode
 		Columns("name", "on_main_page", "in_filter", "added_at", "updated_at", "position", "img").
 		Values(request.Name, request.OnMainPage, request.InFilter, time.Now().UTC(), time.Now().UTC(),
 			request.Position, request.Img).
-		Suffix("RETURNING *").
+		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
 		ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
