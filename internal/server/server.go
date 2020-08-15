@@ -10,7 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdminer app.UniversityAdminer) *server {
+func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdminer app.UniversityAdminer, authentificator app.Authentificator) *server {
 	e := echo.New()
 	e.Server.Addr = fmt.Sprintf(":%d", cfg.Port)
 
@@ -19,6 +19,7 @@ func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdmi
 		receiver:          receiver,
 		speaker:           speaker,
 		universityAdminer: universityAdminer,
+		authentificator:   authentificator,
 		cfg:               cfg,
 	}
 }
@@ -28,6 +29,7 @@ type server struct {
 	receiver          app.Receiver
 	universityAdminer app.UniversityAdminer
 	speaker           app.Speaker
+	authentificator   app.Authentificator
 	cfg               *Config
 }
 

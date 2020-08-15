@@ -10,4 +10,8 @@ func (s *server) setRoutes() {
 	s.echo.PUT("/admin/university", s.universityAdminer.AddUniversity)
 	s.echo.DELETE("/admin/university/:id", s.universityAdminer.DeleteUniversity)
 	s.echo.POST("/admin/university/:id", s.universityAdminer.UpdateUniversity)
+	s.echo.File("/login", "assets/loginPage.html")
+	s.echo.Any("/auth", s.authentificator.Login)
+	//s.echo.File("/home", "assets/homePage.html")
+	s.echo.GET("/home", s.authentificator.GetInfoFromVK)
 }
