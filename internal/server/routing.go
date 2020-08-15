@@ -5,6 +5,7 @@ func (s *server) setRoutes() {
 	s.echo.GET("/speaker/on_main", s.speaker.GetSpeakersOnMain)
 	s.echo.POST("/admin/speaker", s.speaker.GetSpeakersForAdmin)
 	s.echo.DELETE("/admin/speaker/:id", s.speaker.DeleteSpeakerForAdmin)
+	s.echo.POST("/admin/speaker/:id", s.speaker.UpdateSpeakerForAdmin)
 	s.echo.POST("/admin/university", s.universityAdminer.GetUniversitiesList)
 	s.echo.PUT("/admin/university", s.universityAdminer.AddUniversity)
 	s.echo.DELETE("/admin/university/:id", s.universityAdminer.DeleteUniversity)

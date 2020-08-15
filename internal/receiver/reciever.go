@@ -2,6 +2,7 @@ package receiver
 
 import (
 	"encoding/json"
+	"github.com/labstack/echo/v4"
 	"net/http"
 
 	"github.com/Odar/capital-lurker/pkg/app/models"
@@ -11,7 +12,6 @@ import (
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
 
 	"github.com/Odar/capital-lurker/pkg/api"
-	"github.com/labstack/echo/v4"
 )
 
 func New(repo repositories.ReceiverRepo) *receiver {

@@ -2,6 +2,7 @@ package speaker
 
 import (
 	"strings"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/Odar/capital-lurker/pkg/api"
@@ -134,6 +135,42 @@ func validateFilterGetSpeakerForAdmin(filter *api.Filter, query squirrel.SelectB
 		query = query.Where("img LIKE ?", "%"+*filter.Img+"%")
 	}
 	return query
+}
+
+func (r *repo) UpdateSpeakerForAdmin(ID uint64, request api.UpdateSpeakerForAdminRequest) (
+	*models.Speaker, error) {
+	updateRequest := r.builder.Update("speaker")
+	if request.Name != nil {
+		updateRequest = updateRequest.Set("name", *request.Name)
+	}
+	if request.OnMainPage != nil {
+		updateRequest = updateRequest.Set("on_main_page", *request.OnMainPage)
+	}
+	if request.InFilter != nil {
+		updateRequest = updateRequest.Set("in_filter", *request.InFilter)
+	}
+	updateRequest = updateRequest.Set("updated_at", time.Now().UTC())
+	if request.Position != nil {
+		updateRequest = updateRequest.Set("position", *request.Position)
+	}
+	if request.Img != nil {
+		updateRequest = updateRequest.Set("img", *request.Img)
+	}
+
+	sql, args, err := updateRequest.Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
+		Where("id = ?", ID).
+		ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+
+	res := &models.Speaker{}
+	err = r.postgres.Get(res, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	return res, nil
 }
 
 func validateSortByParameter(sortBy string) string {

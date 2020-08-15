@@ -133,3 +133,36 @@ func (s *speaker) deleteSpeakerForAdmin(request *api.DeleteSpeakerForAdminReques
 	}
 	return "error", errors.New("something went wrong")
 }
+
+func (s *speaker) UpdateSpeakerForAdmin(ctx echo.Context) error {
+	var request api.UpdateSpeakerForAdminRequest
+	err := ctx.Bind(&request)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not retrieve data from JSON:%+v", request)
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+	requestID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not retrieve id:%+v", ctx.Param("id"))
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+
+	updatedSpeaker, err := s.updateSpeakerForAdmin(requestID, request)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not update speaker for admin with request %+v", request)
+		ctx.Response().WriteHeader(http.StatusInternalServerError)
+	}
+
+	ctx.Response().WriteHeader(http.StatusOK)
+	return json.NewEncoder(ctx.Response()).Encode(updatedSpeaker)
+}
+
+func (s *speaker) updateSpeakerForAdmin(requestID uint64, request api.UpdateSpeakerForAdminRequest) (
+	*models.Speaker, error) {
+	updatedSpeaker, err := s.repo.UpdateSpeakerForAdmin(requestID, request)
+	if err != nil {
+		return updatedSpeaker, errors.Wrap(err, "can not update in db")
+	}
+
+	return updatedSpeaker, nil
+}
