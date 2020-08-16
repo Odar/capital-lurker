@@ -248,33 +248,33 @@ func (r *repo) AddSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*mode
 	return addedSpeaker, nil
 }
 
-func validateFilter(table_name string, filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
+func validateFilter(tableName string, filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
 	if filter != nil {
 		if filter.ID != nil { //add fix to query: id starts from 1
-			query = query.Where(table_name+".id = ?", *filter.ID)
+			query = query.Where(tableName+".id = ?", *filter.ID)
 		}
 		if filter.Name != nil {
-			query = query.Where(table_name+".name LIKE ?", "%"+*filter.Name+"%")
+			query = query.Where(tableName+".name LIKE ?", "%"+*filter.Name+"%")
 		}
 		if filter.OnMainPage != nil { //how to parse blanks?
-			query = query.Where(table_name+".on_main_page = ?", *filter.OnMainPage)
+			query = query.Where(tableName+".on_main_page = ?", *filter.OnMainPage)
 		}
 		if filter.InFilter != nil {
-			query = query.Where(table_name+".in_filter = ?", *filter.InFilter)
+			query = query.Where(tableName+".in_filter = ?", *filter.InFilter)
 		}
 		if filter.AddedAtRange != nil {
-			query = query.Where(table_name+".added_at >= ? AND "+
-				table_name+".added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
+			query = query.Where(tableName+".added_at >= ? AND "+
+				tableName+".added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
 		}
 		if filter.UpdatedAtRange != nil {
-			query = query.Where(table_name+".updated_at >= ? AND "+
-				table_name+".updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
+			query = query.Where(tableName+".updated_at >= ? AND "+
+				tableName+".updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
 		}
 		if filter.Position != nil {
-			query = query.Where(table_name+".position = ?", *filter.Position)
+			query = query.Where(tableName+".position = ?", *filter.Position)
 		}
 		if filter.Img != nil {
-			query = query.Where(table_name+".img LIKE ?", "%"+*filter.Img+"%")
+			query = query.Where(tableName+".img LIKE ?", "%"+*filter.Img+"%")
 		}
 	}
 	return query
