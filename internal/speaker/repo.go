@@ -75,8 +75,8 @@ func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 
 func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filter *api.Filter) (
 	[]api.SpeakerForAdmin, error) {
-	sortBy = validateSortByParameter(sortBy)
-	speakersQuery := validateFilter("speaker", filter, r.builder.Select(
+	sortBy = applySortByParameter(sortBy)
+	speakersQuery := applyFilter("speaker", filter, r.builder.Select(
 		"speaker.id, "+
 			"speaker.name, "+
 			"speaker.on_main_page, "+
@@ -145,7 +145,7 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 }
 
 func (r *repo) CountSpeakersForAdmin(filter *api.Filter) (uint64, error) {
-	speakersQuery := validateFilter("speaker",
+	speakersQuery := applyFilter("speaker",
 		filter, r.builder.Select("count(*)").From("speaker"))
 	sql, args, err := speakersQuery.ToSql()
 	if err != nil {
@@ -248,7 +248,7 @@ func (r *repo) AddSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*mode
 	return addedSpeaker, nil
 }
 
-func validateFilter(tableName string, filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
+func applyFilter(tableName string, filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
 	if filter != nil {
 		if filter.ID != nil { //add fix to query: id starts from 1
 			query = query.Where(tableName+".id = ?", *filter.ID)
@@ -280,7 +280,7 @@ func validateFilter(tableName string, filter *api.Filter, query squirrel.SelectB
 	return query
 }
 
-func validateSortByParameter(sortBy string) string {
+func applySortByParameter(sortBy string) string {
 	var columnNames = map[string]bool{
 		"id":           true,
 		"name":         true,

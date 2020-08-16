@@ -63,7 +63,7 @@ func (s *speaker) GetSpeakersForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	speakersForAdmin, count, err := s.getSpeakerForAdmin(&request)
+	speakersForAdmin, count, err := s.getSpeakersForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get speaker for admin with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -76,7 +76,7 @@ func (s *speaker) GetSpeakersForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([]api.SpeakerForAdmin, uint64, error) {
+func (s *speaker) getSpeakersForAdmin(request *api.GetSpeakersForAdminRequest) ([]api.SpeakerForAdmin, uint64, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
@@ -149,6 +149,7 @@ func (s *speaker) UpdateSpeakerForAdmin(ctx echo.Context) error {
 		log.Error().Err(err).Msgf("can not retrieve data from JSON:%+v", request)
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
+
 	requestID, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not retrieve id:%+v", ctx.Param("id"))
