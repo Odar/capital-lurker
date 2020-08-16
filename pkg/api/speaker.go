@@ -15,7 +15,7 @@ type UniversityOnMain struct {
 	Img  string `json:"img"`
 }
 
-type SpeakerOnMainResponse struct {
+type SpeakerOnMain struct {
 	ID         uint64            `json:"id"`
 	Name       string            `json:"name"`
 	Position   uint64            `json:"position"`
@@ -23,24 +23,11 @@ type SpeakerOnMainResponse struct {
 	University *UniversityOnMain `json:"university"`
 }
 
-type SpeakerOnMain struct {
-	ID         uint64           `json:"id"`
-	Name       string           `json:"name"`
-	Position   uint64           `json:"position"`
-	Img        string           `json:"img"`
-	University UniversityOnMain `json:"university"`
-}
-
 type GetSpeakersOnMainResponse struct {
 	Speakers []SpeakerOnMain `json:"speakers"`
 }
 
 // API for getting speakers for administration
-type DateRangeForFilter struct {
-	From time.Time `json:"from"`
-	To   time.Time `json:"to"`
-}
-
 type GetSpeakersForAdminRequest struct {
 	Limit  int64  `json:"limit"`
 	Page   int64  `json:"page"`

@@ -23,27 +23,51 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMainResponse, error) {
+func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 	if limit <= 0 {
 		return nil, errors.New("bad request; parameter: limit should be positive")
 	}
-	nestedSelectUniversity := r.builder.Select("id, name, img").
-		From("university")
-	sql, args, err := r.builder.Select("speaker.id, speaker.name, speaker.position, speaker.img").
+	sql, args, err := r.builder.Select("speaker.id, speaker.name, speaker.position, speaker.img, " +
+		"university.id, university.name, university.img").
 		From("speaker").
-		Where("on_main_page = true").
-		OrderBy("position DESC").
+		Where("speaker.on_main_page = true").
+		OrderBy("speaker.position DESC").
 		Limit(uint64(limit)).
-		JoinClause(nestedSelectUniversity.Prefix("LEFT JOIN (").Suffix(") u ON speaker.university_id = u.id")).
+		LeftJoin("university ON speaker.university_id = university.id").
 		ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	speakers := make([]api.SpeakerOnMainResponse, 0, limit)
-	err = r.postgres.Select(&speakers, sql, args...)
+	speakers := make([]api.SpeakerOnMain, 0, limit)
+	stmt, err := r.postgres.Query(sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	for stmt.Next() {
+		var speaker api.SpeakerOnMain
+		var university api.UniversityOnMain
+		err = stmt.Scan(
+			&speaker.ID,
+			&speaker.Name,
+			&speaker.Position,
+			&speaker.Img,
+			&university.ID,
+			&university.Name,
+			&university.Img)
+		if university != (api.UniversityOnMain{}) {
+			speaker.University = &university
+		} else {
+			speaker.University = nil
+			err = nil
+		}
+
+		if err != nil {
+			return nil, errors.Wrapf(err, "can not extract data from query `%s` with args %+v", sql, args)
+		}
+
+		speakers = append(speakers, speaker)
 	}
 
 	return speakers, nil
@@ -60,7 +84,15 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 			"speaker.added_at, "+
 			"speaker.updated_at, "+
 			"speaker.position, "+
-			"speaker.img").
+			"speaker.img, "+
+			"university.id, "+
+			"university.name, "+
+			"university.on_main_page, "+
+			"university.in_filter, "+
+			"university.added_at, "+
+			"university.updated_at, "+
+			"university.position, "+
+			"university.img").
 		From("speaker")).
 		Limit(uint64(limit)).Offset(uint64((page - 1) * limit)).OrderBy("speaker." + sortBy)
 	sql, args, err := speakersQuery.LeftJoin("university ON speaker.university_id = university.id").
@@ -70,9 +102,43 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 	}
 
 	speakers := make([]api.SpeakerForAdmin, 0, limit)
-	err = r.postgres.Select(&speakers, sql, args...)
+	stmt, err := r.postgres.Query(sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	for stmt.Next() {
+		var speaker api.SpeakerForAdmin
+		var university api.UniversityForAdmin
+		err = stmt.Scan(
+			&speaker.ID,
+			&speaker.Name,
+			&speaker.OnMainPage,
+			&speaker.InFilter,
+			&speaker.AddedAt,
+			&speaker.UpdatedAt,
+			&speaker.Position,
+			&speaker.Img,
+			&university.ID,
+			&university.Name,
+			&university.OnMainPage,
+			&university.InFilter,
+			&university.AddedAt,
+			&university.UpdatedAt,
+			&university.Position,
+			&university.Img)
+		if university != (api.UniversityForAdmin{}) {
+			speaker.University = &university
+		} else {
+			speaker.University = nil
+			err = nil
+		}
+
+		if err != nil {
+			return nil, errors.Wrapf(err, "can not extract data from query `%s` with args %+v", sql, args)
+		}
+
+		speakers = append(speakers, speaker)
 	}
 
 	return speakers, nil

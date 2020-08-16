@@ -52,20 +52,7 @@ func (s *speaker) getSpeakersOnMain(request api.GetSpeakersOnMainRequest) ([]api
 		return nil, nil
 	}
 
-	castedSpeakers := make([]api.SpeakerOnMain, len(speakers), len(speakers))
-	for i := 0; i < len(speakers); i++ {
-		castedSpeakers[i].ID = speakers[i].ID
-		castedSpeakers[i].Name = speakers[i].Name
-		castedSpeakers[i].Position = speakers[i].Position
-		castedSpeakers[i].Img = speakers[i].Img
-		if speakers[i].University != nil {
-			castedSpeakers[i].University.ID = speakers[i].University.ID
-			castedSpeakers[i].University.Name = speakers[i].University.Name
-			castedSpeakers[i].University.Img = speakers[i].University.Img
-		}
-	}
-
-	return castedSpeakers, nil
+	return speakers, nil
 }
 
 func (s *speaker) GetSpeakersForAdmin(ctx echo.Context) error {
@@ -110,12 +97,6 @@ func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([
 	if len(speakers) == 0 {
 		return nil, 0, nil
 	}
-
-	/*for i := 0; i < len(speakers); i++ {
-		if speakers[i].University != nil {
-
-		}
-	}*/
 
 	return speakers, count, nil
 }
