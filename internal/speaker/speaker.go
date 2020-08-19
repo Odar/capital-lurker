@@ -166,3 +166,30 @@ func (s *speaker) updateSpeakerForAdmin(requestID uint64, request api.UpdateSpea
 
 	return updatedSpeaker, nil
 }
+
+func (s *speaker) AddSpeakerForAdmin(ctx echo.Context) error {
+	var request api.AddSpeakerForAdminRequest
+	err := ctx.Bind(&request)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not retrieve data from JSON:%+v", request)
+		return ctx.String(http.StatusBadRequest, err.Error())
+	}
+
+	addedSpeaker, err := s.addSpeakerForAdmin(&request)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not add speaker for admin with request %+v", request)
+		ctx.Response().WriteHeader(http.StatusInternalServerError)
+	}
+
+	ctx.Response().WriteHeader(http.StatusOK)
+	return json.NewEncoder(ctx.Response()).Encode(addedSpeaker)
+}
+
+func (s *speaker) addSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error) {
+	addedSpeaker, err := s.repo.AddSpeakerForAdmin(request)
+	if err != nil {
+		return addedSpeaker, errors.Wrap(err, "can not add into db")
+	}
+
+	return addedSpeaker, nil
+}
