@@ -27,3 +27,10 @@ type ThemeAdminer interface {
 	UpdateThemeForAdmin(ctx echo.Context) error
 	AddThemeForAdmin(ctx echo.Context) error
 }
+
+type CourseAdminer interface {
+	GetCoursesForAdmin(ctx echo.Context) error
+	DeleteCourseForAdmin(ctx echo.Context) error
+	UpdateCourseForAdmin(ctx echo.Context) error
+	AddCourseForAdmin(ctx echo.Context) error
+}

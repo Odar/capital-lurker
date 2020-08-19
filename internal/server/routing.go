@@ -21,4 +21,10 @@ func (s *server) setRoutes() {
 	s.echo.DELETE("/admin/theme/:id", s.themeAdminer.DeleteThemeForAdmin)
 	s.echo.POST("/admin/theme/:id", s.themeAdminer.UpdateThemeForAdmin)
 	s.echo.PUT("/admin/theme", s.themeAdminer.AddThemeForAdmin)
+
+	// Course entity
+	s.echo.POST("/admin/course", s.courseAdminer.GetCoursesForAdmin)
+	s.echo.DELETE("/admin/course/:id", s.courseAdminer.DeleteCourseForAdmin)
+	s.echo.POST("/admin/course/:id", s.courseAdminer.UpdateCourseForAdmin)
+	s.echo.PUT("/admin/course", s.courseAdminer.AddCourseForAdmin)
 }

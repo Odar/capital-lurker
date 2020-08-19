@@ -11,7 +11,7 @@ import (
 )
 
 func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdminer app.UniversityAdminer,
-	themeAdminer app.ThemeAdminer) *server {
+	themeAdminer app.ThemeAdminer, courseAdminer app.CourseAdminer) *server {
 	e := echo.New()
 	e.Server.Addr = fmt.Sprintf(":%d", cfg.Port)
 
@@ -21,6 +21,7 @@ func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdmi
 		speaker:           speaker,
 		universityAdminer: universityAdminer,
 		themeAdminer:      themeAdminer,
+		courseAdminer:     courseAdminer,
 		cfg:               cfg,
 	}
 }
@@ -31,6 +32,7 @@ type server struct {
 	universityAdminer app.UniversityAdminer
 	speaker           app.Speaker
 	themeAdminer      app.ThemeAdminer
+	courseAdminer     app.CourseAdminer
 	cfg               *Config
 }
 
