@@ -46,7 +46,7 @@ func (r *repo) GetThemesForAdmin(limit int64, page int64, sortBy string, filter 
 }
 
 func (r *repo) CountThemesForAdmin(filter *api.Filter) (uint64, error) {
-	base := r.builder.Select("count(*) as c").From("themes")
+	base := r.builder.Select("count(*) as c").From("theme")
 	filtered := applyFilter(base, filter)
 	sql, args, err := filtered.ToSql()
 	if err != nil {

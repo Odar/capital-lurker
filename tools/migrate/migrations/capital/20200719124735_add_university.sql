@@ -22,4 +22,4 @@ alter table university
         primary key (id);
 
 -- +goose Down
-drop table university if exists;
+drop table if exists university;

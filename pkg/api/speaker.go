@@ -82,17 +82,6 @@ type UpdateSpeakerForAdminRequest struct {
 	Img        *string `json:"img"`
 }
 
-type UpdateSpeakerForAdminResponse struct {
-	ID         uint64    `db:"id"`
-	Name       string    `db:"name"`
-	OnMainPage bool      `db:"on_main_page"`
-	InFilter   bool      `db:"in_filter"`
-	AddedAt    time.Time `db:"added_at"`
-	UpdatedAt  time.Time `db:"updated_at"`
-	Position   uint64    `db:"position"`
-	Img        string    `db:"img"`
-}
-
 // API for adding speaker for administration
 type AddSpeakerForAdminRequest struct {
 	Name       string `json:"name"`
@@ -100,15 +89,4 @@ type AddSpeakerForAdminRequest struct {
 	InFilter   bool   `json:"in_filter"`
 	Position   uint64 `json:"position"`
 	Img        string `json:"img"`
-}
-
-type AddSpeakerForAdminResponse struct {
-	ID         uint64    `db:"id"`
-	Name       string    `db:"name"`
-	OnMainPage bool      `db:"on_main_page"`
-	InFilter   bool      `db:"in_filter"`
-	AddedAt    time.Time `db:"added_at"`
-	UpdatedAt  time.Time `db:"updated_at"`
-	Position   uint64    `db:"position"`
-	Img        string    `db:"img"`
 }
