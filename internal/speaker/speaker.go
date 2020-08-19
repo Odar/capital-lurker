@@ -188,7 +188,7 @@ func (s *speaker) AddSpeakerForAdmin(ctx echo.Context) error {
 func (s *speaker) addSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error) {
 	addedSpeaker, err := s.repo.AddSpeakerForAdmin(request)
 	if err != nil {
-		return addedSpeaker, errors.Wrap(err, "can not update in db")
+		return addedSpeaker, errors.Wrap(err, "can not add into db")
 	}
 
 	return addedSpeaker, nil
