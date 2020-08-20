@@ -43,7 +43,7 @@ func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, pag
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
-	content := make([]models.University, 0)
+	content := make([]models.University, 0, limit)
 	err = r.postgres.Select(&content, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
