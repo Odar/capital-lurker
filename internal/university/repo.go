@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/Odar/capital-lurker/internal/general"
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/jmoiron/sqlx"
@@ -24,7 +25,7 @@ type repo struct {
 
 func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, page int) ([]models.University, error) {
 	base := r.builder.Select("*").From("university")
-	filtered := applyFilter(base, filter)
+	filtered := general.ApplyFilter("university", filter, base)
 
 	sorted := filtered
 	switch sortBy {
@@ -56,7 +57,7 @@ func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, pag
 
 func (r *repo) CountUniversities(filter *api.Filter) (uint64, error) {
 	base := r.builder.Select("count(*) as c").From("university")
-	filtered := applyFilter(base, filter)
+	filtered := general.ApplyFilter("university", filter, base)
 	sql, args, err := filtered.ToSql()
 	if err != nil {
 		return 0, errors.Wrap(err, "can not build sql")
@@ -142,35 +143,4 @@ func (r *repo) UpdateUniversity(request api.UpdateUniversityRequest, id uint64) 
 	}
 
 	return res, nil
-}
-
-func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
-	filtered := base
-	if filter != nil {
-		if filter.ID != nil { //add fix to query: id starts from 1
-			filtered = filtered.Where("id = ?", *filter.ID)
-		}
-		if filter.Name != nil {
-			filtered = filtered.Where("name LIKE ?", "%"+*filter.Name+"%")
-		}
-		if filter.OnMainPage != nil { //how to parse blanks?
-			filtered = filtered.Where("on_main_page = ?", *filter.OnMainPage)
-		}
-		if filter.InFilter != nil {
-			filtered = filtered.Where("in_filter = ?", *filter.InFilter)
-		}
-		if filter.AddedAtRange != nil {
-			filtered = filtered.Where("added_at >= ? AND added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
-		}
-		if filter.UpdatedAtRange != nil {
-			filtered = filtered.Where("updated_at >= ? AND updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
-		}
-		if filter.Position != nil {
-			filtered = filtered.Where("position = ?", *filter.Position)
-		}
-		if filter.Img != nil {
-			filtered = filtered.Where("img LIKE ?", "%"+*filter.Img+"%")
-		}
-	}
-	return filtered
 }
