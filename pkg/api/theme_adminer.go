@@ -22,7 +22,7 @@ type ThemeForAdmin struct {
 }
 
 type GetThemesForAdminResponse struct {
-	Themes []ThemeForAdmin `json:"speakers"`
+	Themes []ThemeForAdmin `json:"themes"`
 	Count  uint64          `json:"count"`
 }
 
