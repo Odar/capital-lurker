@@ -113,7 +113,7 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 		if unparsedSpeakers[i].UniversityID == nil {
 			speakers[i].University = nil
 		} else {
-			speakers[i].University = &api.UniversityForAdmin{
+			speakers[i].University = &models.University{
 				ID:         *unparsedSpeakers[i].UniversityID,
 				Name:       *unparsedSpeakers[i].UniversityName,
 				OnMainPage: *unparsedSpeakers[i].UniversityOnMainPage,
@@ -187,6 +187,9 @@ func (r *repo) UpdateSpeakerForAdmin(ID uint64, request *api.UpdateSpeakerForAdm
 	if request.Img != nil {
 		updateRequest = updateRequest.Set("img", *request.Img)
 	}
+	if request.UniversityID != nil {
+		updateRequest = updateRequest.Set("university_id", *request.UniversityID)
+	}
 
 	sql, args, err := updateRequest.Suffix(
 		"RETURNING "+
@@ -197,7 +200,8 @@ func (r *repo) UpdateSpeakerForAdmin(ID uint64, request *api.UpdateSpeakerForAdm
 			"added_at, "+
 			"updated_at, "+
 			"position, "+
-			"img").
+			"img"+
+			"university_id").
 		Where("id = ?", ID).
 		ToSql()
 	if err != nil {
@@ -215,10 +219,12 @@ func (r *repo) UpdateSpeakerForAdmin(ID uint64, request *api.UpdateSpeakerForAdm
 
 func (r *repo) AddSpeakerForAdmin(request *api.AddSpeakerForAdminRequest) (*models.Speaker, error) {
 	sql, args, err := r.builder.Insert("speaker").
-		Columns("name", "on_main_page", "in_filter", "added_at", "updated_at", "position", "img").
+		Columns("name", "on_main_page", "in_filter", "added_at", "updated_at",
+			"position", "img", "university_id").
 		Values(request.Name, request.OnMainPage, request.InFilter, time.Now().UTC(), time.Now().UTC(),
-			request.Position, request.Img).
-		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
+			request.Position, request.Img, request.UniversityID).
+		Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at," +
+			"position, img, university_id").
 		ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
