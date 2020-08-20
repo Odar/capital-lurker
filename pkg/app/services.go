@@ -18,3 +18,6 @@ type Speaker interface {
 	GetSpeakersForAdmin(ctx echo.Context) error
 	DeleteSpeakerForAdmin(ctx echo.Context) error
 }
+
+type Authenticator interface {
+}
