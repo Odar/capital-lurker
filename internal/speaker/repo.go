@@ -27,8 +27,9 @@ func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 	if limit <= 0 {
 		return nil, errors.New("bad request; parameter: limit should be positive")
 	}
-	sql, args, err := r.builder.Select("speaker.id, speaker.name, speaker.position, speaker.img, " +
-		"university.id, university.name, university.img").
+	sql, args, err := r.builder.Select("speaker.id AS speaker_id, speaker.name AS speaker_name, " +
+		"speaker.position AS speaker_position, speaker.img AS speaker_img, " +
+		"university.id AS university_id, university.name AS university_name, university.img AS university_img").
 		From("speaker").
 		Where("speaker.on_main_page = true").
 		OrderBy("speaker.position DESC").
@@ -39,35 +40,27 @@ func (r *repo) GetSpeakersOnMain(limit int64) ([]api.SpeakerOnMain, error) {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	speakers := make([]api.SpeakerOnMain, 0, limit)
-	stmt, err := r.postgres.Query(sql, args...)
+	unparsedSpeakers := make([]api.UnparsedSpeakerOnMain, 0, limit)
+	err = r.postgres.Select(&unparsedSpeakers, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	for stmt.Next() {
-		var speaker api.SpeakerOnMain
-		var university api.UniversityOnMain
-		err = stmt.Scan(
-			&speaker.ID,
-			&speaker.Name,
-			&speaker.Position,
-			&speaker.Img,
-			&university.ID,
-			&university.Name,
-			&university.Img)
-		if university != (api.UniversityOnMain{}) {
-			speaker.University = &university
+	speakers := make([]api.SpeakerOnMain, len(unparsedSpeakers), len(unparsedSpeakers))
+	for i := range unparsedSpeakers {
+		speakers[i].ID = unparsedSpeakers[i].ID
+		speakers[i].Name = unparsedSpeakers[i].Name
+		speakers[i].Position = unparsedSpeakers[i].Position
+		speakers[i].Img = unparsedSpeakers[i].Img
+		if unparsedSpeakers[i].UniversityID == nil {
+			speakers[i].University = nil
 		} else {
-			speaker.University = nil
-			err = nil
+			speakers[i].University = &api.UniversityOnMain{
+				ID:   *unparsedSpeakers[i].UniversityID,
+				Name: *unparsedSpeakers[i].UniversityName,
+				Img:  *unparsedSpeakers[i].UniversityImg,
+			}
 		}
-
-		if err != nil {
-			return nil, errors.Wrapf(err, "can not extract data from query `%s` with args %+v", sql, args)
-		}
-
-		speakers = append(speakers, speaker)
 	}
 
 	return speakers, nil
@@ -77,22 +70,22 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 	[]api.SpeakerForAdmin, error) {
 	sortBy = general.ApplySortByParameter(sortBy)
 	speakersQuery := general.ApplyFilter("speaker", filter, r.builder.Select(
-		"speaker.id, "+
-			"speaker.name, "+
-			"speaker.on_main_page, "+
-			"speaker.in_filter, "+
-			"speaker.added_at, "+
-			"speaker.updated_at, "+
-			"speaker.position, "+
-			"speaker.img, "+
-			"university.id, "+
-			"university.name, "+
-			"university.on_main_page, "+
-			"university.in_filter, "+
-			"university.added_at, "+
-			"university.updated_at, "+
-			"university.position, "+
-			"university.img").
+		"speaker.id AS speaker_id, "+
+			"speaker.name AS speaker_name, "+
+			"speaker.on_main_page AS speaker_on_main_page, "+
+			"speaker.in_filter AS speaker_in_filter, "+
+			"speaker.added_at AS speaker_added_at, "+
+			"speaker.updated_at AS speaker_updated_at, "+
+			"speaker.position AS speaker_position, "+
+			"speaker.img AS speaker_img, "+
+			"university.id AS university_id, "+
+			"university.name AS university_name, "+
+			"university.on_main_page AS university_on_main_page, "+
+			"university.in_filter AS university_in_filter, "+
+			"university.added_at AS university_added_at, "+
+			"university.updated_at AS university_updated_at, "+
+			"university.position AS university_position, "+
+			"university.img AS university_img").
 		From("speaker")).
 		Limit(uint64(limit)).Offset(uint64((page - 1) * limit)).OrderBy("speaker." + sortBy)
 	sql, args, err := speakersQuery.LeftJoin("university ON speaker.university_id = university.id").
@@ -101,44 +94,36 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	speakers := make([]api.SpeakerForAdmin, 0, limit)
-	stmt, err := r.postgres.Query(sql, args...)
+	unparsedSpeakers := make([]api.UnparsedSpeakerForAdmin, 0, limit)
+	err = r.postgres.Select(&unparsedSpeakers, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	for stmt.Next() {
-		var speaker api.SpeakerForAdmin
-		var university api.UniversityForAdmin
-		err = stmt.Scan(
-			&speaker.ID,
-			&speaker.Name,
-			&speaker.OnMainPage,
-			&speaker.InFilter,
-			&speaker.AddedAt,
-			&speaker.UpdatedAt,
-			&speaker.Position,
-			&speaker.Img,
-			&university.ID,
-			&university.Name,
-			&university.OnMainPage,
-			&university.InFilter,
-			&university.AddedAt,
-			&university.UpdatedAt,
-			&university.Position,
-			&university.Img)
-		if university != (api.UniversityForAdmin{}) {
-			speaker.University = &university
+	speakers := make([]api.SpeakerForAdmin, len(unparsedSpeakers), len(unparsedSpeakers))
+	for i := range unparsedSpeakers {
+		speakers[i].ID = unparsedSpeakers[i].ID
+		speakers[i].Name = unparsedSpeakers[i].Name
+		speakers[i].OnMainPage = unparsedSpeakers[i].OnMainPage
+		speakers[i].InFilter = unparsedSpeakers[i].InFilter
+		speakers[i].AddedAt = unparsedSpeakers[i].AddedAt
+		speakers[i].UpdatedAt = unparsedSpeakers[i].UpdatedAt
+		speakers[i].Position = unparsedSpeakers[i].Position
+		speakers[i].Img = unparsedSpeakers[i].Img
+		if unparsedSpeakers[i].UniversityID == nil {
+			speakers[i].University = nil
 		} else {
-			speaker.University = nil
-			err = nil
+			speakers[i].University = &api.UniversityForAdmin{
+				ID:         *unparsedSpeakers[i].UniversityID,
+				Name:       *unparsedSpeakers[i].UniversityName,
+				OnMainPage: *unparsedSpeakers[i].UniversityOnMainPage,
+				InFilter:   *unparsedSpeakers[i].UniversityInFilter,
+				AddedAt:    *unparsedSpeakers[i].UniversityAddedAt,
+				UpdatedAt:  *unparsedSpeakers[i].UniversityUpdatedAt,
+				Position:   *unparsedSpeakers[i].UniversityPosition,
+				Img:        *unparsedSpeakers[i].UniversityImg,
+			}
 		}
-
-		if err != nil {
-			return nil, errors.Wrapf(err, "can not extract data from query `%s` with args %+v", sql, args)
-		}
-
-		speakers = append(speakers, speaker)
 	}
 
 	return speakers, nil
