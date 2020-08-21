@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/Odar/capital-lurker/pkg/app/models"
-
 	"github.com/Odar/capital-lurker/pkg/api"
+	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
 	echo "github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
@@ -24,7 +23,7 @@ type themeAdminer struct {
 	repo repositories.ThemeAdminerRepo
 }
 
-func (s *themeAdminer) GetThemesForAdmin(ctx echo.Context) error {
+func (t *themeAdminer) GetThemesForAdmin(ctx echo.Context) error {
 	var request api.GetThemesForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -32,7 +31,7 @@ func (s *themeAdminer) GetThemesForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	themesForAdmin, count, err := s.getThemesForAdmin(&request)
+	themesForAdmin, count, err := t.getThemesForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get theme for admin with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -45,7 +44,7 @@ func (s *themeAdminer) GetThemesForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (s *themeAdminer) getThemesForAdmin(request *api.GetThemesForAdminRequest) ([]api.ThemeForAdmin, uint64, error) {
+func (t *themeAdminer) getThemesForAdmin(request *api.GetThemesForAdminRequest) ([]api.ThemeForAdmin, uint64, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
@@ -53,12 +52,12 @@ func (s *themeAdminer) getThemesForAdmin(request *api.GetThemesForAdminRequest) 
 		request.Page = 1
 	}
 
-	themes, err := s.repo.GetThemesForAdmin(request.Limit, request.Page, request.SortBy, &request.Filter)
+	themes, err := t.repo.GetThemesForAdmin(request.Limit, request.Page, request.SortBy, &request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not get themes from db")
 	}
 
-	count, err := s.repo.CountThemesForAdmin(&request.Filter)
+	count, err := t.repo.CountThemesForAdmin(&request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not count themes from db")
 	}
@@ -70,7 +69,7 @@ func (s *themeAdminer) getThemesForAdmin(request *api.GetThemesForAdminRequest) 
 	return themes, count, nil
 }
 
-func (s *themeAdminer) DeleteThemeForAdmin(ctx echo.Context) error {
+func (t *themeAdminer) DeleteThemeForAdmin(ctx echo.Context) error {
 	var request api.DeleteThemeForAdminRequest
 	var err error
 	request.ID, err = strconv.ParseUint(ctx.Param("id"), 10, 64)
@@ -80,7 +79,7 @@ func (s *themeAdminer) DeleteThemeForAdmin(ctx echo.Context) error {
 	}
 
 	var WHBD string
-	WHBD, err = s.deleteThemeForAdmin(&request)
+	WHBD, err = t.deleteThemeForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not delete theme for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -97,8 +96,8 @@ func (s *themeAdminer) DeleteThemeForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (s *themeAdminer) deleteThemeForAdmin(request *api.DeleteThemeForAdminRequest) (string, error) {
-	count, err := s.repo.DeleteTheme(request.ID)
+func (t *themeAdminer) deleteThemeForAdmin(request *api.DeleteThemeForAdminRequest) (string, error) {
+	count, err := t.repo.DeleteTheme(request.ID)
 	if err != nil {
 		return "error", errors.Wrap(err, "can not delete from db")
 	}
@@ -111,7 +110,7 @@ func (s *themeAdminer) deleteThemeForAdmin(request *api.DeleteThemeForAdminReque
 	return "error", errors.New("something went wrong")
 }
 
-func (s *themeAdminer) UpdateThemeForAdmin(ctx echo.Context) error {
+func (t *themeAdminer) UpdateThemeForAdmin(ctx echo.Context) error {
 	var request api.UpdateThemeForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -125,7 +124,7 @@ func (s *themeAdminer) UpdateThemeForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	updatedTheme, err := s.updateThemeForAdmin(requestID, &request)
+	updatedTheme, err := t.updateThemeForAdmin(requestID, &request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not update theme for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -135,9 +134,9 @@ func (s *themeAdminer) UpdateThemeForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(updatedTheme)
 }
 
-func (s *themeAdminer) updateThemeForAdmin(requestID uint64, request *api.UpdateThemeForAdminRequest) (
+func (t *themeAdminer) updateThemeForAdmin(requestID uint64, request *api.UpdateThemeForAdminRequest) (
 	*models.Theme, error) {
-	updatedTheme, err := s.repo.UpdateThemeForAdmin(requestID, request)
+	updatedTheme, err := t.repo.UpdateThemeForAdmin(requestID, request)
 	if err != nil {
 		return updatedTheme, errors.Wrap(err, "can not update in db")
 	}
@@ -145,7 +144,7 @@ func (s *themeAdminer) updateThemeForAdmin(requestID uint64, request *api.Update
 	return updatedTheme, nil
 }
 
-func (s *themeAdminer) AddThemeForAdmin(ctx echo.Context) error {
+func (t *themeAdminer) AddThemeForAdmin(ctx echo.Context) error {
 	var request api.AddThemeForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -153,7 +152,7 @@ func (s *themeAdminer) AddThemeForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	addedTheme, err := s.addThemeForAdmin(&request)
+	addedTheme, err := t.addThemeForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not add theme for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -163,10 +162,10 @@ func (s *themeAdminer) AddThemeForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(addedTheme)
 }
 
-func (s *themeAdminer) addThemeForAdmin(request *api.AddThemeForAdminRequest) (*models.Theme, error) {
-	addedTheme, err := s.repo.AddThemeForAdmin(request)
+func (t *themeAdminer) addThemeForAdmin(request *api.AddThemeForAdminRequest) (*models.Theme, error) {
+	addedTheme, err := t.repo.AddThemeForAdmin(request)
 	if err != nil {
-		return addedTheme, errors.Wrap(err, "can not update in db")
+		return addedTheme, errors.Wrap(err, "can not add in db")
 	}
 
 	return addedTheme, nil
