@@ -1,6 +1,8 @@
 package api
 
-import "time"
+import (
+	"github.com/Odar/capital-lurker/pkg/app/models"
+)
 
 // API for getting themes for administration
 type GetThemesForAdminRequest struct {
@@ -10,20 +12,9 @@ type GetThemesForAdminRequest struct {
 	Filter Filter `json:"filter"`
 }
 
-type ThemeForAdmin struct {
-	ID         uint64    `db:"id"`
-	Name       string    `db:"name"`
-	Slug       string    `db:"slug"`
-	OnMainPage bool      `db:"on_main_page"`
-	AddedAt    time.Time `db:"added_at"`
-	UpdatedAt  time.Time `db:"updated_at"`
-	Position   uint64    `db:"position"`
-	Img        string    `db:"img"`
-}
-
 type GetThemesForAdminResponse struct {
-	Themes []ThemeForAdmin `json:"themes"`
-	Count  uint64          `json:"count"`
+	Themes []models.Theme `json:"themes"`
+	Count  uint64         `json:"count"`
 }
 
 // API for deleting theme for administration

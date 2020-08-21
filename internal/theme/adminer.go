@@ -44,7 +44,7 @@ func (t *themeAdminer) GetThemesForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (t *themeAdminer) getThemesForAdmin(request *api.GetThemesForAdminRequest) ([]api.ThemeForAdmin, uint64, error) {
+func (t *themeAdminer) getThemesForAdmin(request *api.GetThemesForAdminRequest) ([]models.Theme, uint64, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
