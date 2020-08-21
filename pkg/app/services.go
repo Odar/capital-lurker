@@ -34,3 +34,7 @@ type CourseAdminer interface {
 	UpdateCourseForAdmin(ctx echo.Context) error
 	AddCourseForAdmin(ctx echo.Context) error
 }
+
+type VideoAdminer interface {
+	GetVideosForAdmin(ctx echo.Context) error
+}
