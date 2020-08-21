@@ -24,8 +24,7 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) GetThemesForAdmin(limit int64, page int64, sortBy string, filter *api.Filter) (
-	[]api.ThemeForAdmin, error) {
+func (r *repo) GetThemesForAdmin(limit int64, page int64, sortBy string, filter *api.Filter) ([]models.Theme, error) {
 	base := r.builder.Select("*").From("theme")
 	filtered := general.ApplyFilter("theme", filter, base)
 	sorted := filtered.OrderBy(general.ApplySortByParameter(sortBy))
@@ -36,7 +35,7 @@ func (r *repo) GetThemesForAdmin(limit int64, page int64, sortBy string, filter 
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	themes := make([]api.ThemeForAdmin, 0, limit)
+	themes := make([]models.Theme, 0, limit)
 	err = r.postgres.Select(&themes, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
