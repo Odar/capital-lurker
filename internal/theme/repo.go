@@ -1,10 +1,10 @@
 package theme
 
 import (
-	"strings"
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/Odar/capital-lurker/internal/general"
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/gosimple/slug"
@@ -27,8 +27,8 @@ type repo struct {
 func (r *repo) GetThemesForAdmin(limit int64, page int64, sortBy string, filter *api.Filter) (
 	[]api.ThemeForAdmin, error) {
 	base := r.builder.Select("*").From("theme")
-	filtered := applyFilter(base, filter)
-	sorted := filtered.OrderBy(applySortByParameter(sortBy))
+	filtered := general.ApplyFilter("theme", filter, base)
+	sorted := filtered.OrderBy(general.ApplySortByParameter(sortBy))
 	paged := sorted.Limit(uint64(limit)).Offset(uint64((page - 1) * limit))
 
 	sql, args, err := paged.ToSql()
@@ -47,7 +47,7 @@ func (r *repo) GetThemesForAdmin(limit int64, page int64, sortBy string, filter 
 
 func (r *repo) CountThemesForAdmin(filter *api.Filter) (uint64, error) {
 	base := r.builder.Select("count(*) as c").From("theme")
-	filtered := applyFilter(base, filter)
+	filtered := general.ApplyFilter("theme", filter, base)
 	sql, args, err := filtered.ToSql()
 	if err != nil {
 		return 0, errors.Wrap(err, "can not build sql")
@@ -144,66 +144,4 @@ func (r *repo) AddThemeForAdmin(request *api.AddThemeForAdminRequest) (*models.T
 	}
 
 	return addedTheme, nil
-}
-
-func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
-	filtered := base
-	if filter != nil {
-		if filter.ID != nil {
-			filtered = filtered.Where("id = ?", *filter.ID)
-		}
-		if filter.Name != nil {
-			filtered = filtered.Where("name LIKE ?", "%"+*filter.Name+"%")
-		}
-		if filter.OnMainPage != nil {
-			filtered = filtered.Where("on_main_page = ?", *filter.OnMainPage)
-		}
-		if filter.InFilter != nil {
-			filtered = filtered.Where("in_filter = ?", *filter.InFilter)
-		}
-		if filter.AddedAtRange != nil {
-			filtered = filtered.Where("added_at >= ? AND added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
-		}
-		if filter.UpdatedAtRange != nil {
-			filtered = filtered.Where("updated_at >= ? AND updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
-		}
-		if filter.Position != nil {
-			filtered = filtered.Where("position = ?", *filter.Position)
-		}
-		if filter.Img != nil {
-			filtered = filtered.Where("img LIKE ?", "%"+*filter.Img+"%")
-		}
-	}
-	return filtered
-}
-
-func applySortByParameter(sortBy string) string {
-	var columnNames = map[string]bool{
-		"id":           true,
-		"name":         true,
-		"on_main_page": true,
-		"in_filter":    true,
-		"added_at":     true,
-		"updated_at":   true,
-		"position":     true,
-		"img":          true,
-	}
-	var orderByKeywords = map[string]bool{
-		"DESC": true,
-		"ASC":  true,
-	}
-	words := strings.Split(sortBy, " ")
-	_, foundColumnName := columnNames[words[0]]
-	if len(words) == 1 {
-		if !foundColumnName {
-			sortBy = "id DESC"
-		}
-	} else {
-		_, foundOrderByKeyword := orderByKeywords[words[1]]
-		if !foundColumnName || sortBy == "" || len(words) > 2 || !foundOrderByKeyword {
-			sortBy = "id DESC"
-		}
-	}
-
-	return sortBy
 }

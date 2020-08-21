@@ -2,6 +2,8 @@ package api
 
 import (
 	"time"
+
+	"github.com/Odar/capital-lurker/pkg/app/models"
 )
 
 // API for getting speakers for main page
@@ -64,27 +66,16 @@ type UnparsedSpeakerForAdmin struct {
 	UniversityImg        *string    `db:"university_img"`
 }
 
-type UniversityForAdmin struct {
-	ID         uint64    `json:"id"`
-	Name       string    `json:"name"`
-	OnMainPage bool      `json:"on_main_page"`
-	InFilter   bool      `json:"in_filter"`
-	AddedAt    time.Time `json:"added_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
-	Position   uint64    `json:"position"`
-	Img        string    `json:"img"`
-}
-
 type SpeakerForAdmin struct {
-	ID         uint64              `json:"id"`
-	Name       string              `json:"name"`
-	OnMainPage bool                `json:"on_main_page"`
-	InFilter   bool                `json:"in_filter"`
-	AddedAt    time.Time           `json:"added_at"`
-	UpdatedAt  time.Time           `json:"updated_at"`
-	Position   uint64              `json:"position"`
-	Img        string              `json:"img"`
-	University *UniversityForAdmin `json:"university"`
+	ID         uint64             `json:"id"`
+	Name       string             `json:"name"`
+	OnMainPage bool               `json:"on_main_page"`
+	InFilter   bool               `json:"in_filter"`
+	AddedAt    time.Time          `json:"added_at"`
+	UpdatedAt  time.Time          `json:"updated_at"`
+	Position   uint64             `json:"position"`
+	Img        string             `json:"img"`
+	University *models.University `json:"university"`
 }
 
 type GetSpeakersForAdminResponse struct {
