@@ -8,9 +8,8 @@ create table course
     added_at timestamp not null,
     updated_at timestamp not null,
     constraint course_fk_theme
-        foreign key(theme_id)
-        references theme(id)
-        on delete cascade
+        foreign key (theme_id)
+        references theme (id)
 );
 
 create unique index course_id_uindex
