@@ -1,5 +1,5 @@
 -- +goose Up
-create table user
+create table users
 (
     id serial not null,
     email varchar(50) not null,
@@ -8,20 +8,20 @@ create table user
     last_name varchar(30) not null,
     birth_date timestamp not null,
     signed_up_at timestamp not null,
-    last_signed_in_at timestamp not null,
+    last_signed_in_at timestamp,
     updated_at timestamp not null,
     img varchar not null
 );
 
 create unique index user_id_uindex
-    on user (id);
+    on users (id);
 
 create unique index user_email_uindex
-    on user (email);
+    on users (email);
 
-alter table user
-    add constraint university_pk
+alter table users
+    add constraint user_pk
         primary key (id);
 
 -- +goose Down
-drop table user if exists;
+drop table users if exists;
