@@ -27,62 +27,56 @@ func (r *repo) GetCoursesForAdmin(limit int64, page int64, sortBy string, filter
 	[]api.CourseForAdmin, error) {
 	sortBy = general.ApplySortByParameter(sortBy)
 	coursesQuery := general.ApplyFilter("course", filter, r.builder.Select(
-		"course.id, "+
-			"course.name, "+
-			"course.description, "+
-			"course.added_at, "+
-			"course.updated_at, "+
-			"theme.id, "+
-			"theme.name, "+
-			"theme.slug, "+
-			"theme.on_main_page, "+
-			"theme.added_at, "+
-			"theme.updated_at, "+
-			"theme.position, "+
-			"theme.img").
+		"course.id AS course_id, "+
+			"course.name AS course_name, "+
+			"course.description AS course_description, "+
+			"course.position AS course_position, "+
+			"course.added_at AS course_added_at, "+
+			"course.updated_at AS course_updated_at, "+
+			"theme.id AS theme_id, "+
+			"theme.name AS theme_name, "+
+			"theme.slug AS theme_slug, "+
+			"theme.on_main_page AS theme_on_main_page, "+
+			"theme.added_at AS theme_added_at, "+
+			"theme.updated_at AS theme_updated_at, "+
+			"theme.position AS theme_position, "+
+			"theme.img AS theme_img").
 		From("course")).
-		Limit(uint64(limit)).Offset(uint64((page - 1) * limit)) //.OrderBy("course." + sortBy)
+		Limit(uint64(limit)).Offset(uint64((page - 1) * limit)).OrderBy("course." + sortBy)
 	sql, args, err := coursesQuery.LeftJoin("theme ON course.theme_id = theme.id").
 		ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	courses := make([]api.CourseForAdmin, 0, limit)
-	stmt, err := r.postgres.Query(sql, args...)
+	unparsedCourses := make([]api.UnparsedCourseForAdmin, 0, limit)
+	err = r.postgres.Select(&unparsedCourses, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	for stmt.Next() {
-		var course api.CourseForAdmin
-		var theme api.ThemeForAdmin
-		err = stmt.Scan(
-			&course.ID,
-			&course.Name,
-			&course.Description,
-			&course.AddedAt,
-			&course.UpdatedAt,
-			&theme.ID,
-			&theme.Name,
-			&theme.Slug,
-			&theme.OnMainPage,
-			&theme.AddedAt,
-			&theme.UpdatedAt,
-			&theme.Position,
-			&theme.Img)
-		if theme != (api.ThemeForAdmin{}) {
-			course.Theme = &theme
+	courses := make([]api.CourseForAdmin, len(unparsedCourses), len(unparsedCourses))
+	for i := range unparsedCourses {
+		courses[i].ID = unparsedCourses[i].ID
+		courses[i].Name = unparsedCourses[i].Name
+		courses[i].Description = unparsedCourses[i].Description
+		courses[i].Position = unparsedCourses[i].Position
+		courses[i].AddedAt = unparsedCourses[i].AddedAt
+		courses[i].UpdatedAt = unparsedCourses[i].UpdatedAt
+		if unparsedCourses[i].ThemeID == nil {
+			courses[i].Theme = nil
 		} else {
-			course.Theme = nil
-			err = nil
+			courses[i].Theme = &models.Theme{
+				ID:         *unparsedCourses[i].ThemeID,
+				Name:       *unparsedCourses[i].ThemeName,
+				Slug:       *unparsedCourses[i].ThemeSlug,
+				OnMainPage: *unparsedCourses[i].ThemeOnMainPage,
+				AddedAt:    *unparsedCourses[i].ThemeAddedAt,
+				UpdatedAt:  *unparsedCourses[i].ThemeUpdatedAt,
+				Position:   *unparsedCourses[i].ThemePosition,
+				Img:        *unparsedCourses[i].ThemeImg,
+			}
 		}
-
-		if err != nil {
-			return nil, errors.Wrapf(err, "can not extract data from query `%s` with args %+v", sql, args)
-		}
-
-		courses = append(courses, course)
 	}
 
 	return courses, nil
@@ -132,15 +126,24 @@ func (r *repo) UpdateCourseForAdmin(ID uint64, request *api.UpdateCourseForAdmin
 	if request.Name != nil {
 		updateRequest = updateRequest.Set("name", *request.Name)
 	}
+	if request.ThemeID != nil {
+		updateRequest = updateRequest.Set("theme_id", *request.ThemeID)
+	}
 	if request.Description != nil {
 		updateRequest = updateRequest.Set("description", *request.Description)
+	}
+	if request.Position != nil {
+		updateRequest = updateRequest.Set("position", *request.Position)
 	}
 	updateRequest = updateRequest.Set("updated_at", time.Now().UTC())
 
 	sql, args, err := updateRequest.Suffix(
 		"RETURNING "+
 			"id, "+
+			"name, "+
+			"theme_id, "+
 			"description, "+
+			"position, "+
 			"added_at, "+
 			"updated_at").
 		Where("id = ?", ID).
@@ -160,9 +163,9 @@ func (r *repo) UpdateCourseForAdmin(ID uint64, request *api.UpdateCourseForAdmin
 
 func (r *repo) AddCourseForAdmin(request *api.AddCourseForAdminRequest) (*models.Course, error) {
 	sql, args, err := r.builder.Insert("course").
-		Columns("name", "description", "added_at", "updated_at").
-		Values(request.Name, request.Description, time.Now().UTC(), time.Now().UTC()).
-		Suffix("RETURNING id, name, description, added_at, updated_at").
+		Columns("name", "theme_id", "description", "position", "added_at", "updated_at").
+		Values(request.Name, request.ThemeID, request.Description, request.Position, time.Now().UTC(), time.Now().UTC()).
+		Suffix("RETURNING id, name, theme_id, description, position, added_at, updated_at").
 		ToSql()
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")

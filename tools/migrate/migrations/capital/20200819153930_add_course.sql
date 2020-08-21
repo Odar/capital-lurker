@@ -5,6 +5,7 @@ create table course
     name varchar not null,
     theme_id bigint not null,
     description text not null,
+    position int not null,
     added_at timestamp not null,
     updated_at timestamp not null,
     constraint course_fk_theme
