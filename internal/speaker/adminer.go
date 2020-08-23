@@ -48,6 +48,10 @@ func (s *speaker) getSpeakersOnMain(request api.GetSpeakersOnMainRequest) ([]api
 		return nil, errors.Wrap(err, "can not get from db")
 	}
 
+	if len(speakers) == 0 {
+		return nil, nil
+	}
+
 	return speakers, nil
 }
 
@@ -72,7 +76,7 @@ func (s *speaker) GetSpeakersForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([]models.Speaker, uint64, error) {
+func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([]api.SpeakerForAdmin, uint64, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
@@ -88,6 +92,10 @@ func (s *speaker) getSpeakerForAdmin(request *api.GetSpeakersForAdminRequest) ([
 	count, err := s.repo.CountSpeakersForAdmin(&request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not count speakers from db")
+	}
+
+	if len(speakers) == 0 {
+		return nil, 0, nil
 	}
 
 	return speakers, count, nil
@@ -147,7 +155,7 @@ func (s *speaker) UpdateSpeakerForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	updatedSpeaker, err := s.updateSpeakerForAdmin(requestID, request)
+	updatedSpeaker, err := s.updateSpeakerForAdmin(requestID, &request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not update speaker for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -157,7 +165,7 @@ func (s *speaker) UpdateSpeakerForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(updatedSpeaker)
 }
 
-func (s *speaker) updateSpeakerForAdmin(requestID uint64, request api.UpdateSpeakerForAdminRequest) (
+func (s *speaker) updateSpeakerForAdmin(requestID uint64, request *api.UpdateSpeakerForAdminRequest) (
 	*models.Speaker, error) {
 	updatedSpeaker, err := s.repo.UpdateSpeakerForAdmin(requestID, request)
 	if err != nil {
