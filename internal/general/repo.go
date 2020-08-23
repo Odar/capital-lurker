@@ -7,36 +7,37 @@ import (
 	"github.com/Odar/capital-lurker/pkg/api"
 )
 
-func ApplyFilter(tableName string, filter *api.Filter, query squirrel.SelectBuilder) squirrel.SelectBuilder {
-	if filter != nil {
-		if filter.ID != nil { //add fix to query: id starts from 1
-			query = query.Where(tableName+".id = ?", *filter.ID)
-		}
-		if filter.Name != nil {
-			query = query.Where(tableName+".name LIKE ?", "%"+*filter.Name+"%")
-		}
-		if filter.OnMainPage != nil { //how to parse blanks?
-			query = query.Where(tableName+".on_main_page = ?", *filter.OnMainPage)
-		}
-		if filter.InFilter != nil {
-			query = query.Where(tableName+".in_filter = ?", *filter.InFilter)
-		}
-		if filter.AddedAtRange != nil {
-			query = query.Where(tableName+".added_at >= ? AND "+
-				tableName+".added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
-		}
-		if filter.UpdatedAtRange != nil {
-			query = query.Where(tableName+".updated_at >= ? AND "+
-				tableName+".updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
-		}
-		if filter.Position != nil {
-			query = query.Where(tableName+".position = ?", *filter.Position)
-		}
-		if filter.Img != nil {
-			query = query.Where(tableName+".img LIKE ?", "%"+*filter.Img+"%")
-		}
+func ApplyFilter(tableName string, filter *api.Filter, builder squirrel.SelectBuilder) squirrel.SelectBuilder {
+	if filter == nil {
+		return builder
 	}
-	return query
+	if filter.ID != nil { //add fix to query: id starts from 1
+		builder = builder.Where(tableName+".id = ?", *filter.ID)
+	}
+	if filter.Name != nil {
+		builder = builder.Where(tableName+".name LIKE ?", "%"+*filter.Name+"%")
+	}
+	if filter.OnMainPage != nil { //how to parse blanks?
+		builder = builder.Where(tableName+".on_main_page = ?", *filter.OnMainPage)
+	}
+	if filter.InFilter != nil {
+		builder = builder.Where(tableName+".in_filter = ?", *filter.InFilter)
+	}
+	if filter.AddedAtRange != nil {
+		builder = builder.Where(tableName+".added_at >= ? AND "+
+			tableName+".added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
+	}
+	if filter.UpdatedAtRange != nil {
+		builder = builder.Where(tableName+".updated_at >= ? AND "+
+			tableName+".updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
+	}
+	if filter.Position != nil {
+		builder = builder.Where(tableName+".position = ?", *filter.Position)
+	}
+	if filter.Img != nil {
+		builder = builder.Where(tableName+".img LIKE ?", "%"+*filter.Img+"%")
+	}
+	return builder
 }
 
 func ApplySortByParameter(sortBy string) string {
