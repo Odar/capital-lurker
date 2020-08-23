@@ -49,24 +49,26 @@ func (r *repo) GetCoursesForAdmin(limit int64, page int64, sortBy string, filter
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	unparsedCourses := make([]api.UnparsedCourseForAdmin, 0, limit)
+	unparsedCourses := make([]models.UnparsedCourseForAdmin, 0, limit)
 	err = r.postgres.Select(&unparsedCourses, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	courses := make([]api.CourseForAdmin, len(unparsedCourses), len(unparsedCourses))
+	courses := make([]api.CourseForAdmin, 0, len(unparsedCourses))
 	for i := range unparsedCourses {
-		courses[i].ID = unparsedCourses[i].ID
-		courses[i].Name = unparsedCourses[i].Name
-		courses[i].Description = unparsedCourses[i].Description
-		courses[i].Position = unparsedCourses[i].Position
-		courses[i].AddedAt = unparsedCourses[i].AddedAt
-		courses[i].UpdatedAt = unparsedCourses[i].UpdatedAt
+		course := api.CourseForAdmin{
+			ID:          unparsedCourses[i].ID,
+			Name:        unparsedCourses[i].Name,
+			Description: unparsedCourses[i].Description,
+			Position:    unparsedCourses[i].Position,
+			AddedAt:     unparsedCourses[i].AddedAt,
+			UpdatedAt:   unparsedCourses[i].UpdatedAt,
+		}
 		if unparsedCourses[i].ThemeID == nil {
-			courses[i].Theme = nil
+			course.Theme = nil
 		} else {
-			courses[i].Theme = &models.Theme{
+			course.Theme = &models.Theme{
 				ID:         *unparsedCourses[i].ThemeID,
 				Name:       *unparsedCourses[i].ThemeName,
 				Slug:       *unparsedCourses[i].ThemeSlug,
@@ -77,6 +79,8 @@ func (r *repo) GetCoursesForAdmin(limit int64, page int64, sortBy string, filter
 				Img:        *unparsedCourses[i].ThemeImg,
 			}
 		}
+
+		courses = append(courses, course)
 	}
 
 	return courses, nil

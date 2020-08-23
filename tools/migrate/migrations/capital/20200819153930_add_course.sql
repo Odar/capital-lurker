@@ -3,12 +3,12 @@ create table course
 (
     id serial not null,
     name varchar not null,
-    theme_id bigint not null,
+    theme_id int not null,
     description text not null,
     position int not null,
     added_at timestamp not null,
     updated_at timestamp not null,
-    constraint course_fk_theme
+    constraint course_theme_fk
         foreign key (theme_id)
         references theme (id)
 );

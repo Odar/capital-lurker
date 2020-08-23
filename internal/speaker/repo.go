@@ -109,7 +109,7 @@ func (r *repo) GetSpeakersForAdmin(limit int64, page int64, sortBy string, filte
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	speakers := make([]api.SpeakerForAdmin, len(unparsedSpeakers), len(unparsedSpeakers))
+	speakers := make([]api.SpeakerForAdmin, 0, len(unparsedSpeakers))
 	for i := range unparsedSpeakers {
 		speaker := api.SpeakerForAdmin{
 			ID:         unparsedSpeakers[i].ID,
