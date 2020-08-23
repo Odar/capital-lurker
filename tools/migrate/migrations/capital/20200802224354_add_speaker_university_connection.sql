@@ -1,6 +1,6 @@
 -- +goose Up
 alter table speaker
-add column university_id bigint default null;
+add column university_id int default null;
 
 alter table speaker
     add constraint speaker_university_fk
