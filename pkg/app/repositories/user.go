@@ -8,4 +8,5 @@ import (
 
 type AuthenticatorRepo interface {
 	AddUser(email, password, firstName, lastName string, birthDate time.Time) (*models.User, error)
+	CheckAuth(email, password string) (uint32, bool, error)
 }

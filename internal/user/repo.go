@@ -15,6 +15,11 @@ func NewRepo(postgres *sqlx.DB) *repo {
 	}
 }
 
+type dbResponseIdPass struct {
+	ID   uint32 `db:"id"`
+	Pass string `db:"password"`
+}
+
 type repo struct {
 	postgres *sqlx.DB
 	builder  squirrel.StatementBuilderType
@@ -37,4 +42,23 @@ func (r *repo) AddUser(email, password, firstName, lastName string, birthDate ti
 	}
 
 	return &res, nil
+}
+
+func (r *repo) CheckAuth(email, password string) (uint32, bool, error) {
+	res := dbResponseIdPass{}
+	sql, args, err := r.builder.Select("id, password").From("users").Where("email = ?", email).ToSql()
+
+	if err != nil {
+		return 0, false, errors.Wrap(err, "can not build sql")
+	}
+
+	err = r.postgres.Get(&res, sql, args...)
+	if err != nil {
+		return 0, false, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	if res.Pass != password {
+		return 0, false, errors.New("Wrong email/password")
+	}
+	return res.ID, true, nil
 }

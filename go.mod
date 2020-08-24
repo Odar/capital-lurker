@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/Masterminds/squirrel v1.4.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/globocom/echo-prometheus v0.1.2
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/labstack/echo/v4 v4.1.16
