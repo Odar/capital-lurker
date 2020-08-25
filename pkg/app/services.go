@@ -24,4 +24,5 @@ type Authenticator interface {
 	SignUp(ctx echo.Context) error
 	SignUpViaVk(ctx echo.Context) error
 	TestPage(ctx echo.Context) error
+	Logout(ctx echo.Context) error
 }

@@ -19,4 +19,5 @@ func (s *server) setRoutes() {
 	jwtGroup := s.echo.Group("/signedinonly")
 	jwtGroup.Use(middleware.JWT([]byte("Please, change me!")))
 	jwtGroup.GET("/test", s.authenticator.TestPage)
+	jwtGroup.POST("/logout", s.authenticator.Logout)
 }

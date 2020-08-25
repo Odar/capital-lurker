@@ -44,7 +44,7 @@ func (a *authenticator) Login(ctx echo.Context) error {
 	claims := token.Claims.(jwt.MapClaims)
 
 	claims["id"] = strconv.FormatUint(uint64(id), 10)
-	claims["exp"] = time.Now().Add(time.Minute * 30).Unix()
+	claims["exp"] = time.Now().Add(time.Minute * 10).Unix()
 
 	t, err := token.SignedString([]byte(secret))
 	if err != nil {
@@ -54,6 +54,13 @@ func (a *authenticator) Login(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, map[string]string{
 		"token": t,
 	})
+}
+
+func (a *authenticator) Logout(ctx echo.Context) error {
+	token := ctx.Get("user").(*jwt.Token)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["exp"] = time.Unix(0, 0)
+	return ctx.String(http.StatusUnauthorized, "You are no longer authorized")
 }
 
 func (a *authenticator) SignUp(ctx echo.Context) error {
@@ -86,6 +93,7 @@ func (a *authenticator) TestPage(ctx echo.Context) error {
 }
 
 func (a *authenticator) SignUpViaVk(ctx echo.Context) error {
+
 	return nil
 }
 
