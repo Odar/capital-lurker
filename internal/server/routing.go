@@ -20,4 +20,8 @@ func (s *server) setRoutes() {
 	jwtGroup.Use(middleware.JWT([]byte("Please, change me!")))
 	jwtGroup.GET("/test", s.authenticator.TestPage)
 	jwtGroup.POST("/logout", s.authenticator.Logout)
+
+	s.echo.File("/loginvk", "assets/loginPage.html")
+	s.echo.Any("/auth", s.authenticator.Loginvk)
+	s.echo.GET("/home", s.authenticator.GetInfoFromVK)
 }

@@ -2,7 +2,11 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/go-vk-api/vk"
+	"golang.org/x/oauth2"
+	vkAuth "golang.org/x/oauth2/vk"
 	"net/http"
 	"strconv"
 	"time"
@@ -13,13 +17,37 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+var (
+	vkOauthConfig = &oauth2.Config{
+		ClientID:     "7562746",                    //os.Getenv("CLIENT_ID"),
+		ClientSecret: "rqozJXDcBPrygXS181xr",       //os.Getenv("CLIENT_SECRET"),
+		RedirectURL:  "http://localhost:8888/home", //os.Getenv("REDIRECT_URL"),
+		Scopes:       []string{},
+		Endpoint:     vkAuth.Endpoint,
+	}
+	randomState = "haha"
+)
+
+const secret = "Please, change me!"
+
+type User struct {
+	ID        int64  `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	BDate     string `json:"bdate"`
+	Number    tNum   `json:"contacts"`
+}
+
+type tNum struct {
+	Mobile string `json:"mobile_phone"`
+	Home   string `json:"home_phone"`
+}
+
 func New(repo repositories.AuthenticatorRepo) *authenticator {
 	return &authenticator{
 		repo: repo,
 	}
 }
-
-const secret = "Please, change me!"
 
 type authenticator struct {
 	repo repositories.AuthenticatorRepo
@@ -97,8 +125,41 @@ func (a *authenticator) SignUpViaVk(ctx echo.Context) error {
 	return nil
 }
 
+func (a *authenticator) GetInfoFromVK(ctx echo.Context) error {
+	if ctx.FormValue("state") != randomState {
+		return ctx.String(http.StatusInternalServerError, "state is not valid")
+	}
+	token, err := vkOauthConfig.Exchange(oauth2.NoContext, ctx.FormValue("code"))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, fmt.Sprintf("can not get token %s\n", err.Error()))
+	}
+
+	client, err := vk.NewClientWithOptions(vk.WithToken(token.AccessToken))
+	if err != nil {
+		return ctx.String(http.StatusInternalServerError, fmt.Sprintf("can not create vk api client %s\n", err.Error()))
+	}
+
+	user := getCurrentUser(client)
+	return json.NewEncoder(ctx.Response()).Encode(user)
+}
+
+func getCurrentUser(api *vk.Client) User {
+	var users []User
+
+	api.CallMethod("users.get", vk.RequestParams{
+		"v":      "5.122",
+		"fields": "bdate,contacts",
+	}, &users)
+
+	return users[0]
+}
+
+func (a *authenticator) Loginvk(ctx echo.Context) error {
+	url := vkOauthConfig.AuthCodeURL(randomState)
+	return ctx.Redirect(http.StatusTemporaryRedirect, url)
+}
+
 func (a *authenticator) signUp(email, password, firstName, lastName string, birthDate time.Time) (*models.User, error) {
-	//add a table with emails to validate and another method to move user from tmp table to user table
 	model, err := a.repo.AddUser(email, password, firstName, lastName, birthDate)
 	return model, err
 }
