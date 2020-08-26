@@ -13,17 +13,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func New(repo repositories.ThemeAdminerRepo) *themeAdminer {
-	return &themeAdminer{
+func New(repo repositories.ThemeAdminerRepo) *theme {
+	return &theme{
 		repo: repo,
 	}
 }
 
-type themeAdminer struct {
+type theme struct {
 	repo repositories.ThemeAdminerRepo
 }
 
-func (t *themeAdminer) GetThemesForAdmin(ctx echo.Context) error {
+func (t *theme) GetThemesForAdmin(ctx echo.Context) error {
 	var request api.GetThemesForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -44,7 +44,7 @@ func (t *themeAdminer) GetThemesForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (t *themeAdminer) getThemesForAdmin(request *api.GetThemesForAdminRequest) ([]models.Theme, uint64, error) {
+func (t *theme) getThemesForAdmin(request *api.GetThemesForAdminRequest) ([]models.Theme, uint64, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
@@ -69,7 +69,7 @@ func (t *themeAdminer) getThemesForAdmin(request *api.GetThemesForAdminRequest) 
 	return themes, count, nil
 }
 
-func (t *themeAdminer) DeleteThemeForAdmin(ctx echo.Context) error {
+func (t *theme) DeleteThemeForAdmin(ctx echo.Context) error {
 	var request api.DeleteThemeForAdminRequest
 	var err error
 	request.ID, err = strconv.ParseUint(ctx.Param("id"), 10, 64)
@@ -96,7 +96,7 @@ func (t *themeAdminer) DeleteThemeForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (t *themeAdminer) deleteThemeForAdmin(request *api.DeleteThemeForAdminRequest) (string, error) {
+func (t *theme) deleteThemeForAdmin(request *api.DeleteThemeForAdminRequest) (string, error) {
 	count, err := t.repo.DeleteTheme(request.ID)
 	if err != nil {
 		return "error", errors.Wrap(err, "can not delete from db")
@@ -110,7 +110,7 @@ func (t *themeAdminer) deleteThemeForAdmin(request *api.DeleteThemeForAdminReque
 	return "error", errors.New("something went wrong")
 }
 
-func (t *themeAdminer) UpdateThemeForAdmin(ctx echo.Context) error {
+func (t *theme) UpdateThemeForAdmin(ctx echo.Context) error {
 	var request api.UpdateThemeForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -134,7 +134,7 @@ func (t *themeAdminer) UpdateThemeForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(updatedTheme)
 }
 
-func (t *themeAdminer) updateThemeForAdmin(requestID uint64, request *api.UpdateThemeForAdminRequest) (
+func (t *theme) updateThemeForAdmin(requestID uint64, request *api.UpdateThemeForAdminRequest) (
 	*models.Theme, error) {
 	updatedTheme, err := t.repo.UpdateThemeForAdmin(requestID, request)
 	if err != nil {
@@ -144,7 +144,7 @@ func (t *themeAdminer) updateThemeForAdmin(requestID uint64, request *api.Update
 	return updatedTheme, nil
 }
 
-func (t *themeAdminer) AddThemeForAdmin(ctx echo.Context) error {
+func (t *theme) AddThemeForAdmin(ctx echo.Context) error {
 	var request api.AddThemeForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -162,7 +162,7 @@ func (t *themeAdminer) AddThemeForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(addedTheme)
 }
 
-func (t *themeAdminer) addThemeForAdmin(request *api.AddThemeForAdminRequest) (*models.Theme, error) {
+func (t *theme) addThemeForAdmin(request *api.AddThemeForAdminRequest) (*models.Theme, error) {
 	addedTheme, err := t.repo.AddThemeForAdmin(request)
 	if err != nil {
 		return addedTheme, errors.Wrap(err, "can not add in db")
