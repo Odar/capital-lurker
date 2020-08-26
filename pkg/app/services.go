@@ -20,3 +20,10 @@ type Speaker interface {
 	UpdateSpeakerForAdmin(ctx echo.Context) error
 	AddSpeakerForAdmin(ctx echo.Context) error
 }
+
+type ThemeAdminer interface {
+	GetThemesForAdmin(ctx echo.Context) error
+	DeleteThemeForAdmin(ctx echo.Context) error
+	UpdateThemeForAdmin(ctx echo.Context) error
+	AddThemeForAdmin(ctx echo.Context) error
+}

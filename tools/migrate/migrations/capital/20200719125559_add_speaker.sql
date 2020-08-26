@@ -22,4 +22,4 @@ alter table speaker
 		primary key (id);
 
 -- +goose Down
-DROP TABLE speaker IF EXISTS;
+drop table if exists speaker;
