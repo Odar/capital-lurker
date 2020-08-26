@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Odar/capital-lurker/internal/config"
+	"github.com/Odar/capital-lurker/internal/course"
 	"github.com/Odar/capital-lurker/internal/db"
 	"github.com/Odar/capital-lurker/internal/receiver"
 	"github.com/Odar/capital-lurker/internal/server"
@@ -34,7 +35,11 @@ func main() {
 	themeRepo := theme.NewRepo(capitalDB)
 	themeAdminerService := theme.New(themeRepo)
 
-	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerService, themeAdminerService)
+	courseRepo := course.NewRepo(capitalDB)
+	courseAdminerService := course.New(courseRepo)
+
+	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerService, themeAdminerService,
+		courseAdminerService)
 	err = srv.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not initialize server")
