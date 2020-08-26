@@ -37,4 +37,7 @@ type CourseAdminer interface {
 
 type VideoAdminer interface {
 	GetVideosForAdmin(ctx echo.Context) error
+	DeleteVideoForAdmin(ctx echo.Context) error
+	UpdateVideoForAdmin(ctx echo.Context) error
+	AddVideoForAdmin(ctx echo.Context) error
 }

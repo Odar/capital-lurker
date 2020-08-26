@@ -1,6 +1,8 @@
 package video
 
 import (
+	"time"
+
 	"github.com/Masterminds/squirrel"
 	"github.com/Odar/capital-lurker/internal/general"
 	"github.com/Odar/capital-lurker/pkg/api"
@@ -58,28 +60,30 @@ func (r *repo) GetVideosForAdmin(limit int64, page int64, sortBy string, filter 
 		return nil, errors.Wrap(err, "can not build sql")
 	}
 
-	unparsedVideos := make([]api.UnparsedVideoForAdmin, 0, limit)
+	unparsedVideos := make([]models.UnparsedVideoForAdmin, 0, limit)
 	err = r.postgres.Select(&unparsedVideos, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
 	}
 
-	videos := make([]api.VideoForAdmin, len(unparsedVideos), len(unparsedVideos))
+	videos := make([]api.VideoForAdmin, 0, len(unparsedVideos))
 	for i := range unparsedVideos {
-		videos[i].ID = unparsedVideos[i].ID
-		videos[i].Name = unparsedVideos[i].Name
-		videos[i].Img = unparsedVideos[i].Img
-		videos[i].Video = unparsedVideos[i].Video
-		videos[i].YouTubeVideo = unparsedVideos[i].YouTubeVideo
-		videos[i].PositionInCourse = unparsedVideos[i].PositionInCourse
-		videos[i].AddedAt = unparsedVideos[i].AddedAt
-		videos[i].UpdatedAt = unparsedVideos[i].UpdatedAt
-		videos[i].UploadedAt = unparsedVideos[i].UploadedAt
-		videos[i].YouTubedAt = unparsedVideos[i].YouTubedAt
+		video := api.VideoForAdmin{
+			ID:               unparsedVideos[i].ID,
+			Name:             unparsedVideos[i].Name,
+			Img:              unparsedVideos[i].Img,
+			Video:            unparsedVideos[i].Video,
+			YouTubeVideo:     unparsedVideos[i].YouTubeVideo,
+			PositionInCourse: unparsedVideos[i].PositionInCourse,
+			AddedAt:          unparsedVideos[i].AddedAt,
+			UpdatedAt:        unparsedVideos[i].UpdatedAt,
+			UploadedAt:       unparsedVideos[i].UpdatedAt,
+			YouTubedAt:       unparsedVideos[i].YouTubedAt,
+		}
 		if unparsedVideos[i].CourseID == nil {
-			videos[i].Course = nil
+			video.Course = nil
 		} else {
-			videos[i].Course = &api.CourseForAdmin{
+			video.Course = &api.CourseForAdmin{
 				ID:          *unparsedVideos[i].CourseID,
 				Name:        *unparsedVideos[i].CourseName,
 				Description: *unparsedVideos[i].CourseDescription,
@@ -88,9 +92,9 @@ func (r *repo) GetVideosForAdmin(limit int64, page int64, sortBy string, filter 
 				UpdatedAt:   *unparsedVideos[i].CourseUpdatedAt,
 			}
 			if unparsedVideos[i].ThemeID == nil {
-				videos[i].Course.Theme = nil
+				video.Course.Theme = nil
 			} else {
-				videos[i].Course.Theme = &models.Theme{
+				video.Course.Theme = &models.Theme{
 					ID:         *unparsedVideos[i].ThemeID,
 					Name:       *unparsedVideos[i].ThemeName,
 					Slug:       *unparsedVideos[i].ThemeSlug,
@@ -102,6 +106,8 @@ func (r *repo) GetVideosForAdmin(limit int64, page int64, sortBy string, filter 
 				}
 			}
 		}
+
+		videos = append(videos, video)
 	}
 
 	return videos, nil
@@ -122,4 +128,105 @@ func (r *repo) CountVideosForAdmin(filter *api.Filter) (uint64, error) {
 	}
 
 	return count, nil
+}
+
+func (r *repo) DeleteVideo(ID uint64) (int64, error) {
+	sql, args, err := r.builder.Delete("*").
+		From("video").
+		Where("id = ?", ID).
+		ToSql()
+	if err != nil {
+		return -1, errors.Wrap(err, "can not build sql")
+	}
+
+	result, err := r.postgres.Exec(sql, args...)
+	if err != nil {
+		return -1, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	count, err := result.RowsAffected()
+	if err != nil {
+		return -1, errors.Wrapf(err, "can not estimate deleted rows")
+	}
+
+	return count, nil
+}
+
+func (r *repo) UpdateVideoForAdmin(ID uint64, request *api.UpdateVideoForAdminRequest) (*models.Video, error) {
+	updateRequest := r.builder.Update("video")
+	if request.Name != nil {
+		updateRequest = updateRequest.Set("name", *request.Name)
+	}
+	if request.Img != nil {
+		updateRequest = updateRequest.Set("img", *request.Img)
+	}
+	if request.Video != nil {
+		updateRequest = updateRequest.Set("video", *request.Video)
+	}
+	if request.YouTubeVideo != nil {
+		updateRequest = updateRequest.Set("youtube_video", *request.YouTubeVideo)
+	}
+
+	if request.CourseID != nil {
+		updateRequest = updateRequest.Set("course_id", *request.CourseID)
+	}
+	if request.PositionInCourse != nil {
+		updateRequest = updateRequest.Set("position_in_course", *request.PositionInCourse)
+	}
+	if request.UploadedAt != nil {
+		updateRequest = updateRequest.Set("uploaded_at", *request.UploadedAt)
+	}
+	if request.YouTubedAt != nil {
+		updateRequest = updateRequest.Set("youtubed_at", *request.YouTubedAt)
+	}
+	updateRequest = updateRequest.Set("updated_at", time.Now().UTC())
+
+	sql, args, err := updateRequest.Suffix(
+		"RETURNING "+
+			"id, "+
+			"name, "+
+			"img, "+
+			"video, "+
+			"youtube_video, "+
+			"course_id, "+
+			"position_in_course, "+
+			"added_at, "+
+			"updated_at, "+
+			"uploaded_at, "+
+			"youtubed_at").
+		Where("id = ?", ID).
+		ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+
+	res := &models.Video{}
+	err = r.postgres.Get(res, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	return res, nil
+}
+
+func (r *repo) AddVideoForAdmin(request *api.AddVideoForAdminRequest) (*models.Video, error) {
+	sql, args, err := r.builder.Insert("video").
+		Columns("name", "img", "video", "youtube_video", "course_id",
+			"position_in_course", "added_at", "updated_at", "uploaded_at", "youtubed_at").
+		Values(request.Name, request.Img, request.Video, request.YouTubeVideo, request.CourseID,
+			request.PositionInCourse, time.Now().UTC(), time.Now().UTC(), request.UploadedAt, request.YouTubedAt).
+		Suffix("RETURNING id, name, img, video, youtube_video, course_id, " +
+			"position_in_course, added_at, updated_at, uploaded_at, youtubed_at").
+		ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+
+	addedVideo := &models.Video{}
+	err = r.postgres.Get(addedVideo, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	return addedVideo, nil
 }

@@ -30,4 +30,7 @@ func (s *server) setRoutes() {
 
 	// Video entity
 	s.echo.POST("/admin/video", s.videoAdminer.GetVideosForAdmin)
+	s.echo.DELETE("/admin/video/:id", s.videoAdminer.DeleteVideoForAdmin)
+	s.echo.POST("/admin/video/:id", s.videoAdminer.UpdateVideoForAdmin)
+	s.echo.PUT("/admin/video", s.videoAdminer.AddVideoForAdmin)
 }

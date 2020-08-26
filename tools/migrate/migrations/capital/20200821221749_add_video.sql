@@ -6,13 +6,13 @@ create table video
     img varchar not null,
     video varchar not null,
     youtube_video text not null,
-    course_id bigint not null,
+    course_id int not null,
     position_in_course int not null,
     added_at timestamp not null,
     updated_at timestamp not null,
     uploaded_at timestamp not null,
     youtubed_at timestamp not null,
-    constraint video_fk_course
+    constraint video_course_fk
         foreign key (course_id)
             references course (id)
 
