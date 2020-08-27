@@ -17,6 +17,22 @@ type Speaker interface {
 	GetSpeakersOnMain(ctx echo.Context) error
 	GetSpeakersForAdmin(ctx echo.Context) error
 	DeleteSpeakerForAdmin(ctx echo.Context) error
+	UpdateSpeakerForAdmin(ctx echo.Context) error
+	AddSpeakerForAdmin(ctx echo.Context) error
+}
+
+type ThemeAdminer interface {
+	GetThemesForAdmin(ctx echo.Context) error
+	DeleteThemeForAdmin(ctx echo.Context) error
+	UpdateThemeForAdmin(ctx echo.Context) error
+	AddThemeForAdmin(ctx echo.Context) error
+}
+
+type CourseAdminer interface {
+	GetCoursesForAdmin(ctx echo.Context) error
+	DeleteCourseForAdmin(ctx echo.Context) error
+	UpdateCourseForAdmin(ctx echo.Context) error
+	AddCourseForAdmin(ctx echo.Context) error
 }
 
 type Authenticator interface {

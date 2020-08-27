@@ -8,7 +8,7 @@ import (
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
-	"github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -42,12 +42,12 @@ func (a *adminer) GetUniversitiesList(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
-	if universities == nil {
+	/*if universities == nil {
 		return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
-			Universities: []models.University{},
+			Universities: nil, //[]models.University{},
 			Count:        0,
 		})
-	}
+	}*/
 	return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
 		Universities: universities,
 		Count:        count,

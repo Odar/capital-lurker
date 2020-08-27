@@ -6,11 +6,12 @@ import (
 
 	"github.com/Odar/capital-lurker/pkg/app"
 	echoprometheus "github.com/globocom/echo-prometheus"
-	"github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
-func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdminer app.UniversityAdminer, authenticator app.Authenticator) *server {
+func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdminer app.UniversityAdminer, authenticator app.Authenticator,
+	themeAdminer app.ThemeAdminer, courseAdminer app.CourseAdminer) *server {
 	e := echo.New()
 	e.Server.Addr = fmt.Sprintf(":%d", cfg.Port)
 
@@ -20,6 +21,8 @@ func New(cfg *Config, receiver app.Receiver, speaker app.Speaker, universityAdmi
 		speaker:           speaker,
 		universityAdminer: universityAdminer,
 		authenticator:     authenticator,
+		themeAdminer:      themeAdminer,
+		courseAdminer:     courseAdminer,
 		cfg:               cfg,
 	}
 }
@@ -29,6 +32,8 @@ type server struct {
 	receiver          app.Receiver
 	universityAdminer app.UniversityAdminer
 	speaker           app.Speaker
+	themeAdminer      app.ThemeAdminer
+	courseAdminer     app.CourseAdminer
 	authenticator     app.Authenticator
 	cfg               *Config
 }
