@@ -22,9 +22,8 @@ type Speaker interface {
 type Authenticator interface {
 	Login(ctx echo.Context) error
 	SignUp(ctx echo.Context) error
-	SignUpViaVk(ctx echo.Context) error
 	TestPage(ctx echo.Context) error
 	Logout(ctx echo.Context) error
-	Loginvk(ctx echo.Context) error
-	GetInfoFromVK(ctx echo.Context) error
+	LoginVkInitOauth(ctx echo.Context) error
+	LoginVkCheckRegistration(ctx echo.Context) error
 }

@@ -2,13 +2,13 @@ package user
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-vk-api/vk"
 	"golang.org/x/oauth2"
 	vkAuth "golang.org/x/oauth2/vk"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/Odar/capital-lurker/pkg/api"
@@ -19,9 +19,9 @@ import (
 
 var (
 	vkOauthConfig = &oauth2.Config{
-		ClientID:     "7562746",                    //os.Getenv("CLIENT_ID"),
-		ClientSecret: "rqozJXDcBPrygXS181xr",       //os.Getenv("CLIENT_SECRET"),
-		RedirectURL:  "http://localhost:8888/home", //os.Getenv("REDIRECT_URL"),
+		ClientID:     "7562746",                                 //os.Getenv("CLIENT_ID"),
+		ClientSecret: "rqozJXDcBPrygXS181xr",                    //os.Getenv("CLIENT_SECRET"),
+		RedirectURL:  "http://localhost:8888/tmppageforvkoauth", //os.Getenv("REDIRECT_URL"),
 		Scopes:       []string{},
 		Endpoint:     vkAuth.Endpoint,
 	}
@@ -30,17 +30,17 @@ var (
 
 const secret = "Please, change me!"
 
-type User struct {
-	ID        int64  `json:"id"`
+type vkUser struct {
+	ID        int    `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
-	BDate     string `json:"bdate"`
-	Number    tNum   `json:"contacts"`
 }
 
-type tNum struct {
-	Mobile string `json:"mobile_phone"`
-	Home   string `json:"home_phone"`
+type vkUserInfo struct {
+	ID        int    `json:"id"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	BirthDate string `json:"bdate"`
 }
 
 func New(repo repositories.AuthenticatorRepo) *authenticator {
@@ -67,14 +67,8 @@ func (a *authenticator) Login(ctx echo.Context) error {
 	if !authorized {
 		return ctx.String(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 	}
-	token := jwt.New(jwt.SigningMethodHS256)
 
-	claims := token.Claims.(jwt.MapClaims)
-
-	claims["id"] = strconv.FormatUint(uint64(id), 10)
-	claims["exp"] = time.Now().Add(time.Minute * 10).Unix()
-
-	t, err := token.SignedString([]byte(secret))
+	t, err := a.createToken(id)
 	if err != nil {
 		return err
 	}
@@ -120,15 +114,12 @@ func (a *authenticator) TestPage(ctx echo.Context) error {
 	return ctx.String(http.StatusOK, claims["id"].(string))
 }
 
-func (a *authenticator) SignUpViaVk(ctx echo.Context) error {
-
-	return nil
-}
-
-func (a *authenticator) GetInfoFromVK(ctx echo.Context) error {
+func (a *authenticator) LoginVkCheckRegistration(ctx echo.Context) error {
+	//validate with db
 	if ctx.FormValue("state") != randomState {
 		return ctx.String(http.StatusInternalServerError, "state is not valid")
 	}
+
 	token, err := vkOauthConfig.Exchange(oauth2.NoContext, ctx.FormValue("code"))
 	if err != nil {
 		return ctx.String(http.StatusInternalServerError, fmt.Sprintf("can not get token %s\n", err.Error()))
@@ -139,27 +130,111 @@ func (a *authenticator) GetInfoFromVK(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, fmt.Sprintf("can not create vk api client %s\n", err.Error()))
 	}
 
-	user := getCurrentUser(client)
-	return json.NewEncoder(ctx.Response()).Encode(user)
+	id, err := a.getUserVkID(client)
+	if err != nil {
+		return err
+	}
+
+	isRegistrated, err := a.repo.CheckRegistration(id)
+	if err != nil {
+		return err
+	}
+
+	if !isRegistrated {
+		return a.registrationVk(ctx, client)
+	}
+
+	return a.loginVk(ctx, id)
 }
 
-func getCurrentUser(api *vk.Client) User {
-	var users []User
+func (a *authenticator) registrationVk(ctx echo.Context, api *vk.Client) error {
+	vkUser, err := a.getUserVkInfo(api)
+	if err != nil {
+		return err
+	}
 
-	api.CallMethod("users.get", vk.RequestParams{
+	email, err := a.getEmailForVkRegistration(ctx)
+	if err != nil {
+		return err
+	}
+
+	user, err := a.repo.AddUser(email, "", vkUser.FirstName, vkUser.LastName, time.Time{}) //add nullable to db, get birthDate from string
+	if err != nil {
+		return err
+	}
+
+	return a.loginVk(ctx, vkUser.ID)
+}
+
+func (a *authenticator) getEmailForVkRegistration(ctx echo.Context) (string, error) {
+	return "", nil
+}
+
+func (a *authenticator) loginVk(ctx echo.Context, vkID int) error {
+	id, err := a.repo.GetIDForVk(vkID)
+	if err != nil {
+		return err
+	}
+
+	token, err := a.createToken(id)
+	if err != nil {
+		return err
+	}
+
+	return ctx.JSON(http.StatusOK, map[string]string{
+		"token": token,
+	})
+}
+
+func (a *authenticator) getUserVkID(api *vk.Client) (int, error) {
+	var users []vkUser
+	err := api.CallMethod("users.get", vk.RequestParams{
 		"v":      "5.122",
-		"fields": "bdate,contacts",
+		"fields": "",
 	}, &users)
+	if err != nil {
+		return 0, err
+	}
+	if len(users) < 1 {
+		return 0, errors.New("returned blank list of users")
+	}
 
-	return users[0]
+	return users[0].ID, nil
 }
 
-func (a *authenticator) Loginvk(ctx echo.Context) error {
+func (a *authenticator) getUserVkInfo(api *vk.Client) (vkUserInfo, error) {
+	var users []vkUserInfo
+	err := api.CallMethod("users.get", vk.RequestParams{
+		"v":      "5.122",
+		"fields": "bdate",
+	}, &users)
+	if err != nil {
+		return vkUserInfo{}, err
+	}
+	if len(users) < 1 {
+		return vkUserInfo{}, errors.New("returned blank list of users")
+	}
+
+	return users[0], nil
+}
+
+func (a *authenticator) LoginVkInitOauth(ctx echo.Context) error {
 	url := vkOauthConfig.AuthCodeURL(randomState)
+	//storing randomState in db
 	return ctx.Redirect(http.StatusTemporaryRedirect, url)
 }
 
 func (a *authenticator) signUp(email, password, firstName, lastName string, birthDate time.Time) (*models.User, error) {
 	model, err := a.repo.AddUser(email, password, firstName, lastName, birthDate)
 	return model, err
+}
+
+func (a *authenticator) createToken(id uint64) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+
+	claims["id"] = id
+	claims["exp"] = time.Now().Add(time.Minute * 10).Unix()
+
+	return token.SignedString([]byte(secret))
 }

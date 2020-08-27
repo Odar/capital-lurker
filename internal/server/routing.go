@@ -13,15 +13,19 @@ func (s *server) setRoutes() {
 	s.echo.PUT("/admin/university", s.universityAdminer.AddUniversity)
 	s.echo.DELETE("/admin/university/:id", s.universityAdminer.DeleteUniversity)
 	s.echo.POST("/admin/university/:id", s.universityAdminer.UpdateUniversity)
+
+	//regular
 	s.echo.Any("/login", s.authenticator.Login)
 	s.echo.Any("/signup", s.authenticator.SignUp)
 
+	//vk
+	s.echo.Any("/loginvk", s.authenticator.LoginVkInitOauth)
+	s.echo.GET("/tmppageforvkoauth", s.authenticator.LoginVkCheckRegistration) //set this url in callback url setting in vk/dev
+
+	//restricted
 	jwtGroup := s.echo.Group("/signedinonly")
 	jwtGroup.Use(middleware.JWT([]byte("Please, change me!")))
 	jwtGroup.GET("/test", s.authenticator.TestPage)
 	jwtGroup.POST("/logout", s.authenticator.Logout)
 
-	s.echo.File("/loginvk", "assets/loginPage.html")
-	s.echo.Any("/auth", s.authenticator.Loginvk)
-	s.echo.GET("/home", s.authenticator.GetInfoFromVK)
 }

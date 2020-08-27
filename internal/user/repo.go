@@ -16,7 +16,7 @@ func NewRepo(postgres *sqlx.DB) *repo {
 }
 
 type dbResponseIdPass struct {
-	ID   uint32 `db:"id"`
+	ID   uint64 `db:"id"`
 	Pass string `db:"password"`
 }
 
@@ -44,7 +44,7 @@ func (r *repo) AddUser(email, password, firstName, lastName string, birthDate ti
 	return &res, nil
 }
 
-func (r *repo) CheckAuth(email, password string) (uint32, bool, error) {
+func (r *repo) CheckAuth(email, password string) (uint64, bool, error) {
 	res := dbResponseIdPass{}
 	sql, args, err := r.builder.Select("id, password").From("users").Where("email = ?", email).ToSql()
 
@@ -61,4 +61,12 @@ func (r *repo) CheckAuth(email, password string) (uint32, bool, error) {
 		return 0, false, errors.New("Wrong email/password")
 	}
 	return res.ID, true, nil
+}
+
+func (r *repo) CheckRegistration(vkID int) (bool, error) {
+	return true, nil
+}
+
+func (r *repo) GetIDForVk(vkID int) (uint64, error) {
+	return 0, nil
 }
