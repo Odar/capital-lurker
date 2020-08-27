@@ -4,6 +4,7 @@ import "time"
 
 type User struct {
 	ID             uint64    `db:"id" json:"id"`
+	VkID           uint64    `db:"vk_id" json:"vk_id"`
 	Email          string    `db:"email" json:"email"`
 	Password       string    `db:"password" json:"password"`
 	FirstName      string    `db:"first_name" json:"first_name"`

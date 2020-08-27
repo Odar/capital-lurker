@@ -2,6 +2,7 @@
 create table users
 (
     id serial not null,
+    vk_id integer not null,
     email varchar(50) not null,
     password varchar(50) not null,
     first_name varchar(30) not null,
@@ -18,6 +19,9 @@ create unique index user_id_uindex
 
 create unique index user_email_uindex
     on users (email);
+
+create unique index user_vk_id_uindex
+    on users (vk_id);
 
 alter table users
     add constraint user_pk

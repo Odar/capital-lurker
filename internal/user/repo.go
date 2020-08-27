@@ -25,10 +25,10 @@ type repo struct {
 	builder  squirrel.StatementBuilderType
 }
 
-func (r *repo) AddUser(email, password, firstName, lastName string, birthDate time.Time) (*models.User, error) {
+func (r *repo) AddUser(email, password, firstName, lastName string, birthDate time.Time, vkID uint64) (*models.User, error) {
 	res := models.User{}
-	sql, args, err := r.builder.Insert("users").Columns("email, password, first_name, last_name, birth_date, signed_up_at, last_signed_in_at, updated_at, img").
-		Values(email, password, firstName, lastName, birthDate, time.Now().UTC(), time.Unix(0, 0).UTC(), time.Now().UTC(), "default.png").
+	sql, args, err := r.builder.Insert("users").Columns("vk_id, email, password, first_name, last_name, birth_date, signed_up_at, last_signed_in_at, updated_at, img").
+		Values(vkID, email, password, firstName, lastName, birthDate, time.Now().UTC(), time.Unix(0, 0).UTC(), time.Now().UTC(), "default.png").
 		Suffix("RETURNING id, email, password, first_name, last_name, birth_date, signed_up_at, last_signed_in_at, updated_at, img").
 		ToSql()
 
@@ -63,10 +63,35 @@ func (r *repo) CheckAuth(email, password string) (uint64, bool, error) {
 	return res.ID, true, nil
 }
 
-func (r *repo) CheckRegistration(vkID int) (bool, error) {
-	return true, nil
+func (r *repo) CheckRegistration(vkID uint64) (bool, error) {
+	sql, args, err := r.builder.Select("COUNT (*) as c").From("users").Where("vk_id = ?", vkID).ToSql()
+	if err != nil {
+		return false, errors.Wrap(err, "can not build sql")
+	}
+
+	var result uint64
+	err = r.postgres.Get(&result, sql, args...)
+	if err != nil {
+		return false, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	if result > 0 {
+		return true, nil
+	}
+	return false, nil
 }
 
-func (r *repo) GetIDForVk(vkID int) (uint64, error) {
-	return 0, nil
+func (r *repo) GetIDForVk(vkID uint64) (uint64, error) {
+	sql, args, err := r.builder.Select("id").From("users").Where("vk_id = ?", vkID).ToSql()
+	if err != nil {
+		return 0, errors.Wrap(err, "can not build sql")
+	}
+
+	var result uint64
+	err = r.postgres.Get(&result, sql, args...)
+	if err != nil {
+		return 0, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	return result, nil
 }

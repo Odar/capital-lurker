@@ -7,8 +7,8 @@ import (
 )
 
 type AuthenticatorRepo interface {
-	AddUser(email, password, firstName, lastName string, birthDate time.Time) (*models.User, error)
+	AddUser(email, password, firstName, lastName string, birthDate time.Time, vkID uint64) (*models.User, error)
 	CheckAuth(email, password string) (uint64, bool, error)
-	CheckRegistration(vkID int) (bool, error)
-	GetIDForVk(vkID int) (uint64, error)
+	CheckRegistration(vkID uint64) (bool, error)
+	GetIDForVk(vkID uint64) (uint64, error)
 }

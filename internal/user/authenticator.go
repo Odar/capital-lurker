@@ -31,13 +31,13 @@ var (
 const secret = "Please, change me!"
 
 type vkUser struct {
-	ID        int    `json:"id"`
+	ID        uint64 `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 }
 
 type vkUserInfo struct {
-	ID        int    `json:"id"`
+	ID        uint64 `json:"id"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 	BirthDate string `json:"bdate"`
@@ -111,7 +111,9 @@ func (a *authenticator) SignUp(ctx echo.Context) error {
 func (a *authenticator) TestPage(ctx echo.Context) error {
 	token := ctx.Get("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)
-	return ctx.String(http.StatusOK, claims["id"].(string))
+	return ctx.JSON(http.StatusOK, map[string]interface{}{
+		"id": claims["id"],
+	})
 }
 
 func (a *authenticator) LoginVkCheckRegistration(ctx echo.Context) error {
@@ -158,7 +160,7 @@ func (a *authenticator) registrationVk(ctx echo.Context, api *vk.Client) error {
 		return err
 	}
 
-	user, err := a.repo.AddUser(email, "", vkUser.FirstName, vkUser.LastName, time.Time{}) //add nullable to db, get birthDate from string
+	_, err = a.repo.AddUser(email, "", vkUser.FirstName, vkUser.LastName, time.Time{}, vkUser.ID) //add nullable to db, get birthDate from string
 	if err != nil {
 		return err
 	}
@@ -170,7 +172,7 @@ func (a *authenticator) getEmailForVkRegistration(ctx echo.Context) (string, err
 	return "", nil
 }
 
-func (a *authenticator) loginVk(ctx echo.Context, vkID int) error {
+func (a *authenticator) loginVk(ctx echo.Context, vkID uint64) error {
 	id, err := a.repo.GetIDForVk(vkID)
 	if err != nil {
 		return err
@@ -186,7 +188,7 @@ func (a *authenticator) loginVk(ctx echo.Context, vkID int) error {
 	})
 }
 
-func (a *authenticator) getUserVkID(api *vk.Client) (int, error) {
+func (a *authenticator) getUserVkID(api *vk.Client) (uint64, error) {
 	var users []vkUser
 	err := api.CallMethod("users.get", vk.RequestParams{
 		"v":      "5.122",
@@ -225,7 +227,7 @@ func (a *authenticator) LoginVkInitOauth(ctx echo.Context) error {
 }
 
 func (a *authenticator) signUp(email, password, firstName, lastName string, birthDate time.Time) (*models.User, error) {
-	model, err := a.repo.AddUser(email, password, firstName, lastName, birthDate)
+	model, err := a.repo.AddUser(email, password, firstName, lastName, birthDate, 0)
 	return model, err
 }
 
