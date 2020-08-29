@@ -85,7 +85,7 @@ func (a *adminer) AddUniversity(ctx echo.Context) error {
 
 	model, err := a.addUniversity(request)
 	if err != nil {
-		log.Error().Err(err).Msgf("can not get universities list with request %+v", request)
+		log.Error().Err(err).Msgf("can not add university with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	ctx.Response().WriteHeader(http.StatusOK)

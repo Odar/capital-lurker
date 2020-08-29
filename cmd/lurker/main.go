@@ -9,6 +9,7 @@ import (
 	"github.com/Odar/capital-lurker/internal/speaker"
 	"github.com/Odar/capital-lurker/internal/theme"
 	"github.com/Odar/capital-lurker/internal/university"
+	"github.com/Odar/capital-lurker/internal/user"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -38,8 +39,10 @@ func main() {
 	courseRepo := course.NewRepo(capitalDB)
 	courseAdminerService := course.New(courseRepo)
 
-	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerService, themeAdminerService,
-		courseAdminerService)
+	authenticatorRepo := user.NewRepo(capitalDB)
+	authenticatorService := user.New(authenticatorRepo)
+
+	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerService, authenticatorService, themeAdminerService, courseAdminerService)
 	err = srv.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not initialize server")

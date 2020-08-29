@@ -34,3 +34,13 @@ type CourseAdminer interface {
 	UpdateCourseForAdmin(ctx echo.Context) error
 	AddCourseForAdmin(ctx echo.Context) error
 }
+
+type Authenticator interface {
+	Login(ctx echo.Context) error
+	SignUp(ctx echo.Context) error
+	TestPage(ctx echo.Context) error
+	Logout(ctx echo.Context) error
+	LoginVkInitOauth(ctx echo.Context) error
+	LoginVkCheckRegistration(ctx echo.Context) error
+	CheckTokenValidityMiddleware(next echo.HandlerFunc) echo.HandlerFunc
+}
