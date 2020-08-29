@@ -14,17 +14,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func New(repo repositories.VideoAdminerRepo) *videoAdminer {
-	return &videoAdminer{
+func New(repo repositories.VideoAdminerRepo) *adminer {
+	return &adminer{
 		repo: repo,
 	}
 }
 
-type videoAdminer struct {
+type adminer struct {
 	repo repositories.VideoAdminerRepo
 }
 
-func (v *videoAdminer) GetVideosForAdmin(ctx echo.Context) error {
+func (a *adminer) GetVideosForAdmin(ctx echo.Context) error {
 	var request api.GetVideosForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -32,7 +32,7 @@ func (v *videoAdminer) GetVideosForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	videosForAdmin, count, err := v.getVideosForAdmin(&request)
+	videosForAdmin, count, err := a.getVideosForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get video for admin with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -45,7 +45,7 @@ func (v *videoAdminer) GetVideosForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (v *videoAdminer) getVideosForAdmin(request *api.GetVideosForAdminRequest) ([]api.VideoForAdmin, uint64, error) {
+func (a *adminer) getVideosForAdmin(request *api.GetVideosForAdminRequest) ([]api.VideoForAdmin, uint64, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
@@ -53,12 +53,12 @@ func (v *videoAdminer) getVideosForAdmin(request *api.GetVideosForAdminRequest) 
 		request.Page = 1
 	}
 
-	videos, err := v.repo.GetVideosForAdmin(request.Limit, request.Page, request.SortBy, &request.Filter)
+	videos, err := a.repo.GetVideosForAdmin(request.Limit, request.Page, request.SortBy, &request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not get videos from db")
 	}
 
-	count, err := v.repo.CountVideosForAdmin(&request.Filter)
+	count, err := a.repo.CountVideosForAdmin(&request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not count videos from db")
 	}
@@ -70,7 +70,7 @@ func (v *videoAdminer) getVideosForAdmin(request *api.GetVideosForAdminRequest) 
 	return videos, count, nil
 }
 
-func (v *videoAdminer) DeleteVideoForAdmin(ctx echo.Context) error {
+func (a *adminer) DeleteVideoForAdmin(ctx echo.Context) error {
 	var request api.DeleteVideoForAdminRequest
 	var err error
 	request.ID, err = strconv.ParseUint(ctx.Param("id"), 10, 64)
@@ -80,7 +80,7 @@ func (v *videoAdminer) DeleteVideoForAdmin(ctx echo.Context) error {
 	}
 
 	var WHBD string
-	WHBD, err = v.deleteVideoForAdmin(&request)
+	WHBD, err = a.deleteVideoForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not delete video for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -97,8 +97,8 @@ func (v *videoAdminer) DeleteVideoForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (v *videoAdminer) deleteVideoForAdmin(request *api.DeleteVideoForAdminRequest) (string, error) {
-	count, err := v.repo.DeleteVideo(request.ID)
+func (a *adminer) deleteVideoForAdmin(request *api.DeleteVideoForAdminRequest) (string, error) {
+	count, err := a.repo.DeleteVideo(request.ID)
 	if err != nil {
 		return "error", errors.Wrap(err, "can not delete from db")
 	}
@@ -111,7 +111,7 @@ func (v *videoAdminer) deleteVideoForAdmin(request *api.DeleteVideoForAdminReque
 	return "error", errors.New("something went wrong")
 }
 
-func (v *videoAdminer) UpdateVideoForAdmin(ctx echo.Context) error {
+func (a *adminer) UpdateVideoForAdmin(ctx echo.Context) error {
 	var request api.UpdateVideoForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -125,7 +125,7 @@ func (v *videoAdminer) UpdateVideoForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	updatedVideo, err := v.updateVideoForAdmin(requestID, &request)
+	updatedVideo, err := a.updateVideoForAdmin(requestID, &request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not update video for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -135,9 +135,9 @@ func (v *videoAdminer) UpdateVideoForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(updatedVideo)
 }
 
-func (v *videoAdminer) updateVideoForAdmin(requestID uint64, request *api.UpdateVideoForAdminRequest) (
+func (a *adminer) updateVideoForAdmin(requestID uint64, request *api.UpdateVideoForAdminRequest) (
 	*models.Video, error) {
-	updatedVideo, err := v.repo.UpdateVideoForAdmin(requestID, request)
+	updatedVideo, err := a.repo.UpdateVideoForAdmin(requestID, request)
 	if err != nil {
 		return updatedVideo, errors.Wrap(err, "can not update in db")
 	}
@@ -145,7 +145,7 @@ func (v *videoAdminer) updateVideoForAdmin(requestID uint64, request *api.Update
 	return updatedVideo, nil
 }
 
-func (v *videoAdminer) AddVideoForAdmin(ctx echo.Context) error {
+func (a *adminer) AddVideoForAdmin(ctx echo.Context) error {
 	var request api.AddVideoForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -153,7 +153,7 @@ func (v *videoAdminer) AddVideoForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	addedVideo, err := v.addVideoForAdmin(&request)
+	addedVideo, err := a.addVideoForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not add video for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -163,8 +163,8 @@ func (v *videoAdminer) AddVideoForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(addedVideo)
 }
 
-func (v *videoAdminer) addVideoForAdmin(request *api.AddVideoForAdminRequest) (*models.Video, error) {
-	addedVideo, err := v.repo.AddVideoForAdmin(request)
+func (a *adminer) addVideoForAdmin(request *api.AddVideoForAdminRequest) (*models.Video, error) {
+	addedVideo, err := a.repo.AddVideoForAdmin(request)
 	if err != nil {
 		return addedVideo, errors.Wrap(err, "can not add into db")
 	}
