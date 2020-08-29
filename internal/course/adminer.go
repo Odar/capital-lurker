@@ -15,17 +15,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func New(repo repositories.CourseAdminerRepo) *courseAdminer {
-	return &courseAdminer{
+func New(repo repositories.CourseAdminerRepo) *adminer {
+	return &adminer{
 		repo: repo,
 	}
 }
 
-type courseAdminer struct {
+type adminer struct {
 	repo repositories.CourseAdminerRepo
 }
 
-func (c *courseAdminer) GetCoursesForAdmin(ctx echo.Context) error {
+func (a *adminer) GetCoursesForAdmin(ctx echo.Context) error {
 	var request api.GetCoursesForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -33,7 +33,7 @@ func (c *courseAdminer) GetCoursesForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	coursesForAdmin, count, err := c.getCoursesForAdmin(&request)
+	coursesForAdmin, count, err := a.getCoursesForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not get courses for admin with request %+v", request)
 		return ctx.String(http.StatusInternalServerError, err.Error())
@@ -46,7 +46,7 @@ func (c *courseAdminer) GetCoursesForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (c *courseAdminer) getCoursesForAdmin(request *api.GetCoursesForAdminRequest) ([]api.CourseForAdmin, uint64, error) {
+func (a *adminer) getCoursesForAdmin(request *api.GetCoursesForAdminRequest) ([]api.CourseForAdmin, uint64, error) {
 	if request.Limit <= 0 {
 		request.Limit = 10
 	}
@@ -54,12 +54,12 @@ func (c *courseAdminer) getCoursesForAdmin(request *api.GetCoursesForAdminReques
 		request.Page = 1
 	}
 
-	courses, err := c.repo.GetCoursesForAdmin(request.Limit, request.Page, request.SortBy, &request.Filter)
+	courses, err := a.repo.GetCoursesForAdmin(request.Limit, request.Page, request.SortBy, &request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not get courses from db")
 	}
 
-	count, err := c.repo.CountCoursesForAdmin(&request.Filter)
+	count, err := a.repo.CountCoursesForAdmin(&request.Filter)
 	if err != nil {
 		return nil, 0, errors.Wrap(err, "can not count courses from db")
 	}
@@ -71,7 +71,7 @@ func (c *courseAdminer) getCoursesForAdmin(request *api.GetCoursesForAdminReques
 	return courses, count, nil
 }
 
-func (c *courseAdminer) DeleteCourseForAdmin(ctx echo.Context) error {
+func (a *adminer) DeleteCourseForAdmin(ctx echo.Context) error {
 	var request api.DeleteCourseForAdminRequest
 	var err error
 	request.ID, err = strconv.ParseUint(ctx.Param("id"), 10, 64)
@@ -81,7 +81,7 @@ func (c *courseAdminer) DeleteCourseForAdmin(ctx echo.Context) error {
 	}
 
 	var WHBD string
-	WHBD, err = c.deleteCourseForAdmin(&request)
+	WHBD, err = a.deleteCourseForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not delete course for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -98,8 +98,8 @@ func (c *courseAdminer) DeleteCourseForAdmin(ctx echo.Context) error {
 	})
 }
 
-func (c *courseAdminer) deleteCourseForAdmin(request *api.DeleteCourseForAdminRequest) (string, error) {
-	count, err := c.repo.DeleteCourse(request.ID)
+func (a *adminer) deleteCourseForAdmin(request *api.DeleteCourseForAdminRequest) (string, error) {
+	count, err := a.repo.DeleteCourse(request.ID)
 	if err != nil {
 		return "error", errors.Wrap(err, "can not delete from db")
 	}
@@ -112,7 +112,7 @@ func (c *courseAdminer) deleteCourseForAdmin(request *api.DeleteCourseForAdminRe
 	return "error", errors.New("something went wrong")
 }
 
-func (c *courseAdminer) UpdateCourseForAdmin(ctx echo.Context) error {
+func (a *adminer) UpdateCourseForAdmin(ctx echo.Context) error {
 	var request api.UpdateCourseForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -126,7 +126,7 @@ func (c *courseAdminer) UpdateCourseForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	updatedCourse, err := c.updateCourseForAdmin(requestID, &request)
+	updatedCourse, err := a.updateCourseForAdmin(requestID, &request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not update course for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -136,9 +136,9 @@ func (c *courseAdminer) UpdateCourseForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(updatedCourse)
 }
 
-func (c *courseAdminer) updateCourseForAdmin(requestID uint64, request *api.UpdateCourseForAdminRequest) (
+func (a *adminer) updateCourseForAdmin(requestID uint64, request *api.UpdateCourseForAdminRequest) (
 	*models.Course, error) {
-	updatedCourse, err := c.repo.UpdateCourseForAdmin(requestID, request)
+	updatedCourse, err := a.repo.UpdateCourseForAdmin(requestID, request)
 	if err != nil {
 		return updatedCourse, errors.Wrap(err, "can not update in db")
 	}
@@ -146,7 +146,7 @@ func (c *courseAdminer) updateCourseForAdmin(requestID uint64, request *api.Upda
 	return updatedCourse, nil
 }
 
-func (c *courseAdminer) AddCourseForAdmin(ctx echo.Context) error {
+func (a *adminer) AddCourseForAdmin(ctx echo.Context) error {
 	var request api.AddCourseForAdminRequest
 	err := ctx.Bind(&request)
 	if err != nil {
@@ -154,7 +154,7 @@ func (c *courseAdminer) AddCourseForAdmin(ctx echo.Context) error {
 		return ctx.String(http.StatusBadRequest, err.Error())
 	}
 
-	addedCourse, err := c.addCourseForAdmin(&request)
+	addedCourse, err := a.addCourseForAdmin(&request)
 	if err != nil {
 		log.Error().Err(err).Msgf("can not add course for admin with request %+v", request)
 		ctx.Response().WriteHeader(http.StatusInternalServerError)
@@ -164,8 +164,8 @@ func (c *courseAdminer) AddCourseForAdmin(ctx echo.Context) error {
 	return json.NewEncoder(ctx.Response()).Encode(addedCourse)
 }
 
-func (c *courseAdminer) addCourseForAdmin(request *api.AddCourseForAdminRequest) (*models.Course, error) {
-	addedCourse, err := c.repo.AddCourseForAdmin(request)
+func (a *adminer) addCourseForAdmin(request *api.AddCourseForAdminRequest) (*models.Course, error) {
+	addedCourse, err := a.repo.AddCourseForAdmin(request)
 	if err != nil {
 		return addedCourse, errors.Wrap(err, "can not add into db")
 	}
