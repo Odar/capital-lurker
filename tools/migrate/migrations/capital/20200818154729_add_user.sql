@@ -11,7 +11,8 @@ create table users
     signed_up_at timestamp not null,
     last_signed_in_at timestamp,
     updated_at timestamp not null,
-    img varchar not null
+    img varchar not null,
+    token varchar not null
 );
 
 create unique index user_id_uindex

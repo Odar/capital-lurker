@@ -14,4 +14,5 @@ type User struct {
 	LastSignedInAt time.Time `db:"last_signed_in_at" json:"last_signed_in_at"`
 	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
 	Img            string    `db:"img" json:"img"`
+	Token          string    `db:"token" json:"token"`
 }

@@ -28,7 +28,7 @@ func (s *server) setRoutes() {
 
 	// Restricted
 	jwtGroup := s.echo.Group("/signedinonly")
-	jwtGroup.Use(middleware.JWT([]byte("Please, change me!")))
+	jwtGroup.Use(middleware.JWT([]byte("Please, change me!")), s.authenticator.CheckTokenValidityMiddleware)
 	jwtGroup.GET("/test", s.authenticator.TestPage)
 	jwtGroup.POST("/logout", s.authenticator.Logout)
 

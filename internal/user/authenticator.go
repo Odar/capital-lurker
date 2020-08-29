@@ -73,6 +73,11 @@ func (a *authenticator) Login(ctx echo.Context) error {
 		return err
 	}
 
+	err = a.repo.UpdateTokenWithID(id, t)
+	if err != nil {
+		return err
+	}
+
 	return ctx.JSON(http.StatusOK, map[string]string{
 		"token": t,
 	})
@@ -81,7 +86,12 @@ func (a *authenticator) Login(ctx echo.Context) error {
 func (a *authenticator) Logout(ctx echo.Context) error {
 	token := ctx.Get("user").(*jwt.Token)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Unix(0, 0)
+	id := uint64(claims["id"].(float64))
+	err := a.repo.InvalidateToken(id)
+	if err != nil {
+		return err
+	}
+
 	return ctx.String(http.StatusUnauthorized, "You are no longer authorized")
 }
 
@@ -183,6 +193,11 @@ func (a *authenticator) loginVk(ctx echo.Context, vkID uint64) error {
 		return err
 	}
 
+	err = a.repo.UpdateTokenWithID(id, token)
+	if err != nil {
+		return err
+	}
+
 	return ctx.JSON(http.StatusOK, map[string]string{
 		"token": token,
 	})
@@ -236,7 +251,45 @@ func (a *authenticator) createToken(id uint64) (string, error) {
 	claims := token.Claims.(jwt.MapClaims)
 
 	claims["id"] = id
-	claims["exp"] = time.Now().Add(time.Minute * 10).Unix()
+	claims["exp"] = time.Now().Add(time.Hour).Unix() // session duration
 
-	return token.SignedString([]byte(secret))
+	tokenString, err := token.SignedString([]byte(secret))
+	err = a.repo.UpdateTokenWithID(id, tokenString)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, err
+}
+
+func (a *authenticator) CheckTokenValidityMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(ctx echo.Context) error {
+		token := ctx.Get("user").(*jwt.Token)
+		claims := token.Claims.(jwt.MapClaims)
+		id := uint64(claims["id"].(float64))
+		result, err := a.repo.CheckToken(id, token.Raw)
+		if err != nil {
+			return &echo.HTTPError{
+				Code:     http.StatusInternalServerError,
+				Message:  "cannot get jwt",
+				Internal: err,
+			}
+		}
+		if result == repositories.TokenStatusInvalidToken {
+			return &echo.HTTPError{
+				Code:     http.StatusUnauthorized,
+				Message:  "invalid or expired token",
+				Internal: err,
+			}
+		}
+		if result == repositories.TokenStatusLoggedOut {
+			return &echo.HTTPError{
+				Code:     http.StatusUnauthorized,
+				Message:  "logged out",
+				Internal: err,
+			}
+		}
+
+		return next(ctx)
+	}
 }

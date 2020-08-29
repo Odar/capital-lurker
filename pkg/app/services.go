@@ -42,4 +42,5 @@ type Authenticator interface {
 	Logout(ctx echo.Context) error
 	LoginVkInitOauth(ctx echo.Context) error
 	LoginVkCheckRegistration(ctx echo.Context) error
+	CheckTokenValidityMiddleware(next echo.HandlerFunc) echo.HandlerFunc
 }
