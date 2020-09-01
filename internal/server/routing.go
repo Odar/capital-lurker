@@ -27,4 +27,10 @@ func (s *server) setRoutes() {
 	s.echo.DELETE("/admin/course/:id", s.courseAdminer.DeleteCourseForAdmin)
 	s.echo.POST("/admin/course/:id", s.courseAdminer.UpdateCourseForAdmin)
 	s.echo.PUT("/admin/course", s.courseAdminer.AddCourseForAdmin)
+
+	// Video entity
+	s.echo.POST("/admin/video", s.videoAdminer.GetVideosForAdmin)
+	s.echo.DELETE("/admin/video/:id", s.videoAdminer.DeleteVideoForAdmin)
+	s.echo.POST("/admin/video/:id", s.videoAdminer.UpdateVideoForAdmin)
+	s.echo.PUT("/admin/video", s.videoAdminer.AddVideoForAdmin)
 }
