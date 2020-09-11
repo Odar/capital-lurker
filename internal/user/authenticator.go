@@ -147,12 +147,12 @@ func (a *authenticator) LoginVkCheckRegistration(ctx echo.Context) error {
 		return err
 	}
 
-	isRegistrated, err := a.repo.CheckRegistration(id)
+	isRegistered, err := a.repo.CheckRegistration(id)
 	if err != nil {
 		return err
 	}
 
-	if !isRegistrated {
+	if !isRegistered {
 		return a.registrationVk(ctx, client)
 	}
 
