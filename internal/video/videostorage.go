@@ -1,25 +1,26 @@
 package video
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"os"
+
+	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 )
 
 const (
 	pathToSave = "/home/alexander/videoTest/"
 )
 
-type videodisc struct {
+type videostorage struct {
 }
 
-func New() *videodisc {
-	return &videodisc{}
+func New() *videostorage {
+	return &videostorage{}
 }
 
-func (v *videodisc) UploadVideo(ctx echo.Context) error {
+func (v *videostorage) UploadVideo(ctx echo.Context) error {
 	id := ctx.FormValue("id")
 
 	file, err := ctx.FormFile("file")
