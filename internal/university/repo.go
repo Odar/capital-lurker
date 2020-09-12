@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/Masterminds/squirrel"
+	"github.com/Odar/capital-lurker/internal/general"
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/jmoiron/sqlx"
@@ -24,7 +25,7 @@ type repo struct {
 
 func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, page int) ([]models.University, error) {
 	base := r.builder.Select("*").From("university")
-	filtered := applyFilter(base, filter)
+	filtered := general.ApplyFilter("university", filter, base)
 
 	sorted := filtered
 	switch sortBy {
@@ -42,7 +43,7 @@ func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, pag
 	if err != nil {
 		return nil, errors.Wrap(err, "can not build sql")
 	}
-	content := make([]models.University, 0)
+	content := make([]models.University, 0, limit)
 	err = r.postgres.Select(&content, sql, args...)
 	if err != nil {
 		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
@@ -56,7 +57,7 @@ func (r *repo) GetUniversitiesList(filter *api.Filter, sortBy string, limit, pag
 
 func (r *repo) CountUniversities(filter *api.Filter) (uint64, error) {
 	base := r.builder.Select("count(*) as c").From("university")
-	filtered := applyFilter(base, filter)
+	filtered := general.ApplyFilter("university", filter, base)
 	sql, args, err := filtered.ToSql()
 	if err != nil {
 		return 0, errors.Wrap(err, "can not build sql")
@@ -109,33 +110,37 @@ func (r *repo) DeleteUniversity(id uint64) (int64, error) {
 	return num, err
 }
 
-func applyFilter(base squirrel.SelectBuilder, filter *api.Filter) squirrel.SelectBuilder {
-	filtered := base
-	if filter != nil {
-		if filter.Id != 0 { //add fix to query: id starts from 1
-			filtered = filtered.Where("id = ?", filter.Id)
-		}
-		if filter.Name != "" {
-			filtered = filtered.Where("name LIKE ?", "%"+filter.Name+"%")
-		}
-		if filter.OnMainPage != nil { //how to parse blanks?
-			filtered = filtered.Where("on_main_page = ?", *filter.OnMainPage)
-		}
-		if filter.InFilter != nil {
-			filtered = filtered.Where("in_filter = ?", *filter.InFilter)
-		}
-		if filter.AddedAtRange != nil {
-			filtered = filtered.Where("added_at >= ? AND added_at < ?", filter.AddedAtRange.From, filter.AddedAtRange.To)
-		}
-		if filter.UpdatedAtRange != nil {
-			filtered = filtered.Where("updated_at >= ? AND updated_at < ?", filter.UpdatedAtRange.From, filter.UpdatedAtRange.To)
-		}
-		if filter.Position != 0 {
-			filtered = filtered.Where("position = ?", filter.Position)
-		}
-		if filter.Img != "" {
-			filtered = filtered.Where("img LIKE ?", "%"+filter.Img+"%")
-		}
+func (r *repo) UpdateUniversity(request api.UpdateUniversityRequest, id uint64) (*models.University, error) {
+	updateRequest := r.builder.Update("university")
+	if request.Name != nil {
+		updateRequest = updateRequest.Set("name", *request.Name)
 	}
-	return filtered
+	if request.OnMainPage != nil {
+		updateRequest = updateRequest.Set("on_main_page", *request.OnMainPage)
+	}
+	if request.InFilter != nil {
+		updateRequest = updateRequest.Set("in_filter", *request.InFilter)
+	}
+	updateRequest = updateRequest.Set("updated_at", time.Now().UTC())
+	if request.Position != nil {
+		updateRequest = updateRequest.Set("position", *request.Position)
+	}
+	if request.Img != nil {
+		updateRequest = updateRequest.Set("img", *request.Img)
+	}
+
+	sql, args, err := updateRequest.Suffix("RETURNING id, name, on_main_page, in_filter, added_at, updated_at, position, img").
+		Where("id = ?", id).
+		ToSql()
+	if err != nil {
+		return nil, errors.Wrap(err, "can not build sql")
+	}
+
+	res := &models.University{}
+	err = r.postgres.Get(res, sql, args...)
+	if err != nil {
+		return nil, errors.Wrapf(err, "can not exec query `%s` with args %+v", sql, args)
+	}
+
+	return res, nil
 }

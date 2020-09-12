@@ -16,7 +16,7 @@ const (
 type videostorage struct {
 }
 
-func New() *videostorage {
+func NewStorage() *videostorage {
 	return &videostorage{}
 }
 

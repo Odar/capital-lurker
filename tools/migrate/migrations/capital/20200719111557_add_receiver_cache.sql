@@ -17,7 +17,5 @@ alter table receiver_cache
 	add constraint receiver_cache_pk
 		primary key (id);
 
-
-
 -- +goose Down
-DROP TABLE receiver_cache IF EXISTS;
+drop table if exists receiver_cache;

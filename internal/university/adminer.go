@@ -8,7 +8,7 @@ import (
 	"github.com/Odar/capital-lurker/pkg/api"
 	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
-	"github.com/labstack/echo/v4"
+	echo "github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 )
@@ -42,12 +42,12 @@ func (a *adminer) GetUniversitiesList(ctx echo.Context) error {
 		return ctx.String(http.StatusInternalServerError, err.Error())
 	}
 	ctx.Response().WriteHeader(http.StatusOK)
-	if universities == nil {
+	/*if universities == nil {
 		return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
-			Universities: []models.University{},
+			Universities: nil, //[]models.University{},
 			Count:        0,
 		})
-	}
+	}*/
 	return json.NewEncoder(ctx.Response()).Encode(api.PostResponse{
 		Universities: universities,
 		Count:        count,
@@ -125,13 +125,13 @@ func (a *adminer) DeleteUniversity(ctx echo.Context) error {
 	ctx.Response().WriteHeader(http.StatusOK)
 	if err != nil {
 		return json.NewEncoder(ctx.Response()).Encode(api.DeleteUniversityResponse{
-			Whdb:  resp,
+			WHBD:  resp,
 			Error: err.Error(),
 		})
 	}
 
 	return json.NewEncoder(ctx.Response()).Encode(api.DeleteUniversityResponse{
-		Whdb:  resp,
+		WHBD:  resp,
 		Error: "",
 	})
 }
@@ -145,4 +145,37 @@ func (a *adminer) deleteUniversity(id uint64) (string, error) {
 		return deletedResponse, nil
 	}
 	return nothingResponse, nil
+}
+
+func (a *adminer) UpdateUniversity(ctx echo.Context) error {
+	idString := ctx.Param("id")
+	if idString == "" {
+		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	idInt, err := strconv.ParseUint(idString, 10, 64)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	var request api.UpdateUniversityRequest
+	err = ctx.Bind(&request)
+	if err != nil {
+		return ctx.String(http.StatusBadRequest, http.StatusText(http.StatusBadRequest))
+	}
+
+	resp, err := a.updateUniversity(request, idInt)
+	if err != nil {
+		log.Error().Err(err).Msgf("can not update university with request %+v and id = %d", request, idInt)
+		return ctx.String(http.StatusInternalServerError, err.Error())
+	}
+
+	ctx.Response().WriteHeader(http.StatusOK)
+	return json.NewEncoder(ctx.Response()).Encode(api.PutResponse{
+		University: *resp,
+	})
+}
+
+func (a *adminer) updateUniversity(request api.UpdateUniversityRequest, id uint64) (*models.University, error) {
+	return a.repo.UpdateUniversity(request, id)
 }

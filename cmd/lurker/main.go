@@ -2,10 +2,12 @@ package main
 
 import (
 	"github.com/Odar/capital-lurker/internal/config"
+	"github.com/Odar/capital-lurker/internal/course"
 	"github.com/Odar/capital-lurker/internal/db"
 	"github.com/Odar/capital-lurker/internal/receiver"
 	"github.com/Odar/capital-lurker/internal/server"
 	"github.com/Odar/capital-lurker/internal/speaker"
+	"github.com/Odar/capital-lurker/internal/theme"
 	"github.com/Odar/capital-lurker/internal/university"
 	"github.com/Odar/capital-lurker/internal/video"
 	_ "github.com/lib/pq"
@@ -26,14 +28,25 @@ func main() {
 	receiverService := receiver.New(receiverRepo)
 
 	universityRepo := university.NewRepo(capitalDB)
-	universityAdminerServise := university.New(universityRepo)
+	universityAdminerService := university.New(universityRepo)
 
 	speakerRepo := speaker.NewRepo(capitalDB)
 	speakerService := speaker.New(speakerRepo)
 
-	videodisk := video.New()
+	themeRepo := theme.NewRepo(capitalDB)
+	themeAdminerService := theme.New(themeRepo)
 
-	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerServise, videodisk)
+	courseRepo := course.NewRepo(capitalDB)
+	courseAdminerService := course.New(courseRepo)
+
+	videoRepo := video.NewRepo(capitalDB)
+	videoAdminerService := video.New(videoRepo)
+
+	videoStorage := video.NewStorage()
+
+	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerService, themeAdminerService,
+		courseAdminerService, videoAdminerService, videoStorage)
+
 	err = srv.Init()
 	if err != nil {
 		log.Fatal().Err(err).Msg("can not initialize server")
