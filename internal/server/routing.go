@@ -33,4 +33,5 @@ func (s *server) setRoutes() {
 	s.echo.DELETE("/admin/video/:id", s.videoAdminer.DeleteVideoForAdmin)
 	s.echo.POST("/admin/video/:id", s.videoAdminer.UpdateVideoForAdmin)
 	s.echo.PUT("/admin/video", s.videoAdminer.AddVideoForAdmin)
+	s.echo.POST("/admin/video/upload", s.videoAdminer.UploadVideoOnYouTube)
 }

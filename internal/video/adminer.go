@@ -1,27 +1,39 @@
 package video
 
 import (
+	"context"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
+	"strings"
 
-	"github.com/Odar/capital-lurker/pkg/app/models"
+	"google.golang.org/api/option"
 
 	"github.com/Odar/capital-lurker/pkg/api"
+	"github.com/Odar/capital-lurker/pkg/app/models"
 	"github.com/Odar/capital-lurker/pkg/app/repositories"
 	echo "github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
+	youtube "google.golang.org/api/youtube/v3"
 )
 
-func New(repo repositories.VideoAdminerRepo) *adminer {
+func New(repo repositories.VideoAdminerRepo, cfgSecret YouTubeClientSecretConfig,
+	cfgVideo YouTubeVideoResourceConfig) *adminer {
 	return &adminer{
-		repo: repo,
+		repo:      repo,
+		cfgSecret: cfgSecret,
+		cfgVideo:  cfgVideo,
 	}
 }
 
 type adminer struct {
-	repo repositories.VideoAdminerRepo
+	repo      repositories.VideoAdminerRepo
+	cfgSecret YouTubeClientSecretConfig
+	cfgVideo  YouTubeVideoResourceConfig
 }
 
 func (a *adminer) GetVideosForAdmin(ctx echo.Context) error {
@@ -170,4 +182,64 @@ func (a *adminer) addVideoForAdmin(request *api.AddVideoForAdminRequest) (*model
 	}
 
 	return addedVideo, nil
+}
+
+var (
+	filename    = flag.String("filename", "", "Name of video file to upload")
+	title       = flag.String("title", "Test Title", "Video title")
+	description = flag.String("description", "Test Description", "Video description")
+	category    = flag.String("category", "22", "Video category")
+	keywords    = flag.String("keywords", "", "Comma separated list of video keywords")
+	privacy     = flag.String("privacy", "unlisted", "Video privacy status")
+)
+
+func (a *adminer) UploadVideoOnYouTube(_ echo.Context) error { // cfg *api.YouTubeUploadConfig
+	flag.Parse()
+
+	if *filename == "" {
+		log.Error().Msgf("You must provide a filename of a video file to upload")
+		fmt.Printf("You must provide a filename of a video file to upload")
+		return errors.New("You must provide a filename of a video file to upload")
+	}
+
+	ctx2 := context.Background()
+	youtubeService, err := youtube.NewService(ctx2, option.WithAPIKey(a.cfgSecret.ClientSecret))
+	if err != nil {
+		log.Error().Msgf("Error creating YouTube client: %v", err)
+		fmt.Printf("Error creating YouTube client: %v", err)
+		return err
+	}
+
+	upload := &youtube.Video{
+		Snippet: &youtube.VideoSnippet{
+			Title:       *title,
+			Description: *description,
+			CategoryId:  *category,
+		},
+		Status: &youtube.VideoStatus{PrivacyStatus: *privacy},
+	}
+
+	// The API returns a 400 Bad Request response if tags is an empty string.
+	if strings.Trim(*keywords, "") != "" {
+		upload.Snippet.Tags = strings.Split(*keywords, ",")
+	}
+
+	call := youtubeService.Videos.Insert("snippet,status", upload)
+
+	file, err := os.Open(*filename)
+	defer file.Close()
+	if err != nil {
+		log.Error().Msgf("Error opening %v: %v", *filename, err)
+		fmt.Println("Error opening %v: %v", *filename, err)
+		return err
+	}
+
+	response, err := call.Media(file).Do()
+	if err != nil {
+		log.Error().Msgf("Error opening %v: %v", *filename, err)
+		fmt.Println("Error opening %v: %v", *filename, err)
+		return err
+	}
+	fmt.Printf("Upload successful! Video ID: %v\n", response.Id)
+	return nil
 }

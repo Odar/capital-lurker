@@ -3,13 +3,16 @@ package config
 
 import (
 	"github.com/Odar/capital-lurker/internal/server"
+	"github.com/Odar/capital-lurker/internal/video"
 	"github.com/Odar/capital-lurker/pkg/db"
 )
 
 type Config struct {
-	Server    *server.Config
-	CapitalDB *db.Config
-	Logger    *Logger
+	Server               *server.Config
+	CapitalDB            *db.Config
+	Logger               *Logger
+	YouTubeClientSecret  *video.YouTubeClientSecretConfig
+	YouTubeVideoResource *video.YouTubeVideoResourceConfig
 }
 
 type Logger struct {

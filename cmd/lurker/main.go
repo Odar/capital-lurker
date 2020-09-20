@@ -40,7 +40,7 @@ func main() {
 	courseAdminerService := course.New(courseRepo)
 
 	videoRepo := video.NewRepo(capitalDB)
-	videoAdminerService := video.New(videoRepo)
+	videoAdminerService := video.New(videoRepo, *cfg.YouTubeClientSecret, *cfg.YouTubeVideoResource)
 
 	srv := server.New(cfg.Server, receiverService, speakerService, universityAdminerService, themeAdminerService,
 		courseAdminerService, videoAdminerService)

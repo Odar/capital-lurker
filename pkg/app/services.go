@@ -1,6 +1,8 @@
 package app
 
-import echo "github.com/labstack/echo/v4"
+import (
+	echo "github.com/labstack/echo/v4"
+)
 
 type Receiver interface {
 	Reverse(ctx echo.Context) error
@@ -40,4 +42,5 @@ type VideoAdminer interface {
 	DeleteVideoForAdmin(ctx echo.Context) error
 	UpdateVideoForAdmin(ctx echo.Context) error
 	AddVideoForAdmin(ctx echo.Context) error
+	UploadVideoOnYouTube(ctx echo.Context) error
 }
